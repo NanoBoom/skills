@@ -1,0 +1,53 @@
+{
+  "name": "prp-core",
+  "displayName": "PRP Core",
+  "version": "0.1.0",
+  "description": "Complete PRP workflow automation as agent skills - prd, plan, issue delivery, implement, debug, commit, pr, review, codebase research, a detached build loop, and a skill-authoring meta-skill, with specialized agents",
+  "author": {
+    "name": "NanoBoom",
+    "email": "cinuor@gmail.com",
+    "url": "https://github.com/NanoBoom"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/NanoBoom/skills",
+  "homepage": "https://github.com/NanoBoom/skills",
+  "keywords": [
+    "prp",
+    "planning",
+    "implementation",
+    "code-review",
+    "subagents",
+    "workflow",
+    "github"
+  ],
+  "skills": [
+    "./skills/prp-core/prp-bro",
+    "./skills/prp-core/prp-codebase-question",
+    "./skills/prp-core/prp-commit",
+    "./skills/prp-core/prp-debug",
+    "./skills/prp-core/prp-deliver",
+    "./skills/prp-core/prp-diagram",
+    "./skills/prp-core/prp-implement",
+    "./skills/prp-core/prp-issue",
+    "./skills/prp-core/prp-issue-contract",
+    "./skills/prp-core/prp-loop",
+    "./skills/prp-core/prp-maintainer-triage",
+    "./skills/prp-core/prp-meta-skill",
+    "./skills/prp-core/prp-orchestrate",
+    "./skills/prp-core/prp-plan",
+    "./skills/prp-core/prp-pr",
+    "./skills/prp-core/prp-prd",
+    "./skills/prp-core/prp-prd-update",
+    "./skills/prp-core/prp-research-team",
+    "./skills/prp-core/prp-review",
+    "./skills/prp-core/prp-spike",
+    "./skills/prp-core/prp-technical-writing",
+    "./skills/prp-core/prp-worklist",
+    "./skills/prp-core/prp-worktree"
+  ],
+  "metadata": {
+    "upstream": "https://github.com/Wirasm/PRPs-agentic-eng",
+    "upstreamCommit": "2cced43d4dc9e95206155454e2729aef956ebe22",
+    "forkedAt": "2026-09-11"
+  }
+}

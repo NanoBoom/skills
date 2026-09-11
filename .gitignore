@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+*.log
+
+# Local Claude Code session state, not the plugin's .claude-plugin/ manifests
+.claude/
+
+# Worktrees created by prp-worktree, prp-spike, and prp-orchestrate
+.worktrees/
+
+# Python artifacts from the bundled uv scripts
+__pycache__/
+*.pyc
+.venv/

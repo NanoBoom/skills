@@ -1,0 +1,18 @@
+This repository is a fork of the `prp-core` plugin from
+https://github.com/Wirasm/PRPs-agentic-eng, forked at commit
+2cced43d4dc9e95206155454e2729aef956ebe22 (2026-09-01).
+
+The original work is Copyright (c) 2025-2026 Rasmus Widing and is licensed under
+the MIT License, reproduced in LICENSE. Modifications made in this repository are
+Copyright (c) 2026 NanoBoom and are released under the same license.
+
+Changes from upstream at the time of the fork:
+
+- The repository root is the plugin, rather than the plugin living under
+  `plugins/prp-core/` in a larger repository.
+- Skills moved from `skills/<name>/` to the `skills/prp-core/` bucket, and the
+  `${CLAUDE_PLUGIN_ROOT}` paths inside `prp-loop` and `prp-worktree` were updated
+  to match.
+- `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` were
+  rewritten for this repository, and `skills.sh.json` was added.
+- The skills, agents, and hook themselves are unmodified.
