@@ -13,8 +13,17 @@ It is a fork of the `prp-core` plugin from
 Skills live at `skills/<bucket>/<name>/SKILL.md`.
 
 - `prp-core/` is the promoted bucket. It ships in the plugin.
+- `github-project/` is a deliberately unregistered bucket of self-contained
+  GitHub Issue management skills. Do not register it: `scripts/check-skills.mjs`
+  errors on any `plugin.json` or `skills.sh.json` entry outside `prp-core`, so
+  adding one turns the checker red. It reaches users through `npx skills` and
+  `scripts/link-skills.sh` instead. See
+  [its README](./skills/github-project/README.md).
 - `in-progress/` and `deprecated/` are created when they are needed. They never
   appear in `.claude-plugin/plugin.json`, `README.md`, or `skills.sh.json`.
+
+Only `prp-core/` is promoted. Every other bucket stays out of
+`.claude-plugin/plugin.json`, `README.md`, and `skills.sh.json`.
 
 `agents/` and `hooks/` at the root are the plugin's components. `scripts/` at the
 root holds maintainer tooling and is not a plugin component.
@@ -70,7 +79,9 @@ claude -p "hi" --plugin-dir . --debug-file /tmp/dbg.log
 grep -E "Loaded [0-9]+ (agents|commands|skills)|plugin skills loaded|\[ERROR\]" /tmp/dbg.log
 ```
 
-`npx skills` reports `Found 23 skills`. `claude plugin validate .` checks the
+`npx skills` reports `Found 26 skills`: the 23 promoted ones plus the three in
+the unregistered `github-project/` bucket, which it discovers by scanning
+`skills/` rather than by reading a manifest. `claude plugin validate .` checks the
 marketplace manifest only, which is why `plugin.json` is validated by path as
 well. That second command warns that `CLAUDE.md` at the plugin root is not loaded
 as project context; the warning is expected, so do not pass `--strict` to it. The
