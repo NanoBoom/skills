@@ -75,17 +75,28 @@ write only where the step reports a gap the user agreed to fix.
 3. **Find an existing Project before creating one.** Match by the `--project`
    number if given, then by the configured or supplied title, then by Projects
    already linked to the repository. Only when none matches is creation even a
-   candidate, and only in `initialize`.
+   candidate, and only in `initialize`. When both a number and a title are
+   available, resolve the number and **compare the returned title to the
+   configured one**, with
+   `gh project view <number> --owner <owner> --format json --jq '{number, title, url}'`.
+   Report a mismatch and stop rather than operating on a Project the config does
+   not name. A re-run must repeat this check even when the config file is already
+   populated; a stale number is exactly the case a populated file hides.
 4. **Create and link the Project** when needed.
 5. **Status and Priority fields.** Check that both exist, are single select, and
    have exactly the option sets from rules 7 and 8. Read
    `references/field-model.md` before creating or changing a field.
 6. **Board and Backlog views.** Check them. Read `references/field-model.md`
    for what the API can and cannot do here.
-7. **Built-in automations.** Check `Item added to project` sets `Todo` and
-   `Item closed` sets `Done`. Check the optional Auto-add workflow and that it
-   is filtered to `is:issue`, which is what keeps rule 3 true without anyone
-   policing it. Read `references/automation-setup.md`.
+7. **Built-in automations.** Check that `Item added to project` and
+   `Item closed` exist and are enabled, and that the optional Auto-add workflow
+   is enabled. The workflows query returns a name and an enabled flag and nothing
+   else, so it cannot confirm that the first sets `Todo`, that the second sets
+   `Done`, or that Auto-add is filtered to `is:issue`. Report each as enabled
+   with that qualifier, never as verified. The `is:issue` filter is what keeps
+   rule 3 true without anyone policing it, so when it cannot be read, say it
+   needs a web UI check rather than implying it is correct. Read
+   `references/automation-setup.md`.
 8. **Issue template.** Check `.github/ISSUE_TEMPLATE/` on the default branch.
    When none applies, read `assets/issue-template.md` and write it to
    `.github/ISSUE_TEMPLATE/requirement.md`. Its headings must match the
@@ -96,8 +107,13 @@ write only where the step reports a gap the user agreed to fix.
    created; they are an owner level setting.
 10. **Config file.** Write or check `.github/github-project.yml` from
     `assets/github-project.yml`, filled with the real owner, repo, project
-    number, title, and the option names actually present. Read the asset before
-    writing it.
+    number, and project title. Read the asset before writing it. **Never write
+    discovered option names into it.** The file has no `status:` or `priority:`
+    keys: rules 7 and 8 own that vocabulary. Recording a drifted name such as
+    `In progress` here would silence `meta.nonstandard-status` on every item
+    while `project.field-option-drift` kept erroring on the same field, which is
+    two `error` rules in one catalog permanently disagreeing. Report drift at
+    step 5 and leave it reported.
 11. **Report.** The check result block in section 6, the list of changes
     actually made, and what still needs the web UI.
 
@@ -133,7 +149,9 @@ and change nothing:
 - the view exists with the right name;
 - the workflow exists and is enabled with the right target value;
 - the Issue template file already exists on the default branch;
-- the config file already holds the current values.
+- the config file already holds the current values. "Already satisfied" here
+  means its values were checked against GitHub this run, not that the file was
+  non-empty. Step 3's title comparison runs either way.
 
 Running `initialize` twice on the same repository must produce the same result
 as running it once, and the second run must report every item as already
@@ -159,9 +177,9 @@ Mode: <inspect|initialize|repair>
 - Priority field: <ok | missing | drift: has <options>, expected P0, P1, P2>
 - Board view: <ok | missing | needs web UI>
 - Backlog view: <ok | missing | needs web UI>
-- Automation, item added -> Todo: <enabled | disabled | needs web UI>
-- Automation, item closed -> Done: <enabled | disabled | needs web UI>
-- Auto-add filtered to is:issue: <enabled | disabled | not configured | needs web UI>
+- Automation, item added -> Todo: <enabled, target value not verifiable through the API | disabled | needs web UI>
+- Automation, item closed -> Done: <enabled, target value not verifiable through the API | disabled | needs web UI>
+- Auto-add to project: <enabled, filter not verifiable through the API | disabled | not configured | needs web UI>
 - Issue template: <ok at <path> | written | missing>
 - Issue Types: <configured: <names> | not configured for this owner>
 - Config file .github/github-project.yml: <ok | written | missing>

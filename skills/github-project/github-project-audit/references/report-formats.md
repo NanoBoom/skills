@@ -1,8 +1,13 @@
 # Report formats
 
-The rules every audit output obeys. The copy-ready skeletons for the three
-modes live in `assets/audit-report.md`. Read this file for the rules, then copy
-the skeleton for the mode you are in.
+The rules every audit output obeys, and the copy-ready skeleton for each of the
+three modes, in one file. Each skeleton sits directly beneath the rules it obeys
+so the two cannot drift apart: a skeleton that omits a field the rules define is
+the field disappearing, because the skeleton is what gets copied.
+
+Delete no heading from a skeleton. A heading with `None` under it says the check
+ran and found nothing. A missing heading says nothing at all, and the reader
+cannot tell a clean result from a skipped one.
 
 ## The per-finding block
 
@@ -84,6 +89,44 @@ what would enable it:
   this host.
 ```
 
+## The `audit` skeleton
+
+```markdown
+## Audit
+
+Repository: <owner>/<repo>
+Project: <title> #<number>
+Mode: audit
+Scope: <n> Issues, <m> Project items, <what was included>
+
+## Findings
+
+### [<severity>] <rule-id> - <object>
+
+- Current: <what is true now, read from GitHub>
+- Expected: <what the rule requires>
+- Action: <the concrete change, in the imperative>
+- Fix with: <github-project-manage | github-project-setup>
+- Auto-fixable: <yes | no><, with the condition when it is conditional>
+
+## Rules not evaluated
+
+- <rule-id>: <why, and what would enable it>
+
+## Additional observations
+
+<Real problems no catalog rule covers, marked as outside the catalog, or "None".>
+
+## Assumptions
+
+<Derived values when the repository config file was absent, or "None".>
+```
+
+The conditional suffix on `Auto-fixable` is not decoration. The catalog defines
+`project.contains-pull-request` as auto-fixable "removing the item. Removal needs
+an explicit request", and a bare `yes` invites a reader to remove Project items
+without the request rule 10 demands.
+
 ## Rollups in `report` mode
 
 Rollups come before the findings, not after: the reader wants the shape first.
@@ -103,6 +146,50 @@ that row is large enough to mislead.
 how many findings each one clears, and names the skill to invoke for each. When
 there are no errors and no warnings, write `Nothing. No errors or warnings.`
 
+### The `report` skeleton
+
+```markdown
+## Issue management report
+
+Repository: <owner>/<repo>
+Project: <title> #<number>
+Period: <what was covered>
+Scope: <n> Issues, <m> Project items
+
+## By severity
+
+| Severity | Findings | Objects |
+|---|---|---|
+| error | <n> | <n> |
+| warning | <n> | <n> |
+| info | <n> | <n> |
+
+## By assignee
+
+| Assignee | error | warning | info | Total |
+|---|---|---|---|---|
+| <login> | <n> | <n> | <n> | <n> |
+| unassigned | <n> | <n> | <n> | <n> |
+
+## By rule
+
+| Rule | Severity | Count | Fix with |
+|---|---|---|---|
+| <rule-id> | <severity> | <n> | <owning skill> |
+
+## What to do first
+
+1. <Action, the skill to invoke, and how many findings it clears.>
+
+## Findings
+
+<Per-finding blocks, errors first, then warnings, then info.>
+
+## Rules not evaluated
+
+- <rule-id>: <why>
+```
+
 ## `verify` mode
 
 `verify` re-checks only the named Issues or rule IDs. Its job is to say whether
@@ -117,3 +204,31 @@ Project.
 
 If a named object no longer exists, say that rather than reporting it as
 resolved. A deleted Issue is not a fixed Issue.
+
+### The `verify` skeleton
+
+```markdown
+## Verification
+
+Repository: <owner>/<repo>
+Project: <title> #<number>
+Re-checked: <the rule ids and objects that were named>
+
+## Resolved
+
+- <rule-id> - <object>: <what is true now that satisfies the rule>
+
+## Still failing
+
+<Per-finding blocks, unchanged format.>
+
+## Newly introduced
+
+<Per-finding blocks for anything that was not failing before and is now, inside
+the re-checked scope.>
+
+## Not re-checked
+
+<Anything in the original findings that was outside the named scope, so this is
+not read as a clean audit.>
+```

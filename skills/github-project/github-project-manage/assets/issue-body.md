@@ -34,6 +34,10 @@ Links, prior discussion, screenshots, affected users, constraints, and known
 dependencies. Write "None" rather than deleting the heading.
 ```
 
+Replace the guidance text with real content. Leaving it in place is the same as
+leaving a section empty: it describes what belongs there, not what belongs to
+this requirement.
+
 ## Worked example
 
 ```markdown
@@ -73,5 +77,8 @@ Blocked by nothing.
   from the Issue itself.
 - Keep the criteria about outcomes, not about activities. "Refactor the writer"
   is not a criterion. "The response streams" is.
-- If a section would be genuinely empty, write "None". Do not invent content to
-  fill it, and do not drop the heading.
+- If Non-goals or Additional context would be genuinely empty, write "None". Do
+  not invent content to fill it, and do not drop the heading. "None" is not an
+  answer under Background and goal, Scope, or Acceptance criteria: an audit
+  counts it as absent there, which is correct, because those three are what make
+  the Issue deliverable.

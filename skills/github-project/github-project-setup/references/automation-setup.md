@@ -44,11 +44,19 @@ For a user owned Project, replace `organization(login:)` with `user(login:)`.
 
 Report each of the three as one of:
 
-- `enabled` when the query returns it with `enabled: true`. Add
-  `target value not verifiable through the API` so the report does not overclaim.
+- `enabled` when the query returns it with `enabled: true`. Always add the
+  qualifier, because the query carries no configuration: for the two required
+  workflows write `target value not verifiable through the API`, and for
+  `Auto-add to project` write `filter not verifiable through the API`. Reporting
+  a bare `enabled` claims something this query cannot see.
 - `disabled` when the query returns it with `enabled: false`.
 - `needs web UI` when the query fails, the field is unavailable on the host, or
   the workflow is absent from the result.
+
+The `is:issue` filter in particular is never readable here. An Auto-add workflow
+that is on but unfiltered adds pull requests, which is the exact condition
+`project.contains-pull-request` reports on every audit, so an `enabled` with no
+qualifier is the overclaim that hides it.
 
 ## Configuring them, which is a web UI operation
 
@@ -90,9 +98,15 @@ or do it yourself when the user asks:
 3. Close the Issue, wait a few seconds, and re-read. It should be `Done`.
 
 ```bash
-gh project item-list <project> --owner <owner> --format json --limit 500 --jq '
-  .items[] | select(.content.number == <number>) | {number: .content.number, status}'
+gh issue view <number> --repo <owner>/<repo> \
+  --json number,state,projectItems \
+  --jq '.projectItems[] | {project: .title, status: .status.name}'
 ```
+
+Read it per Issue, as above, not by scanning `gh project item-list`. That list
+pages, and on a Project past its limit the throwaway Issue simply will not be on
+the page, which reads as a missing item and would report a working workflow as
+broken.
 
 Automation is not instant. A single read immediately after the close can show
 the old value. Re-read once before reporting a workflow as broken.

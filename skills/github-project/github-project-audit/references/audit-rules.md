@@ -13,16 +13,34 @@ product decision. It never means this skill applies it (rule 10).
 ## Collect the data once
 
 ```bash
-# Every Issue in scope, with the fields the content rules need.
+# Every Issue in scope, with the fields the content rules need. This is the
+# authority for Issue state; the item list below does not carry it.
 gh issue list --repo <owner>/<repo> --state all --limit 500 \
   --json number,title,url,body,state,stateReason,assignees,labels,createdAt,updatedAt,projectItems
 
 # Every item in the Project, with its field values. Includes pull requests and
-# draft items, which several rules need.
+# draft items, which several rules need. Archived items are excluded: they are
+# not live board state, and counting them reports a false
+# project.duplicate-item on any Issue that was archived and later re-added,
+# and feeds their stale status values to the state rules.
 gh project item-list <project> --owner <owner> --format json --limit 500 \
-  --jq '.items[] | {id, itemType: .content.type, number: .content.number,
-                    title: .content.title, itemState: .content.state,
-                    status, priority, assignees, createdAt: .content.createdAt}'
+  --jq '.items[] | select(.archive == null)
+        | {id, itemType: .content.type, number: .content.number,
+           title: .content.title, status, priority, assignees}'
+
+# Project item creation dates, which item-list does not report. Needed only by
+# project.long-lived-draft, so run it only when that rule is gated on. Join it to
+# the list above on `id`, and take the item type from that list: this query's
+# `type` is a GraphQL enum (`DRAFT_ISSUE`), not the `DraftIssue` spelling the
+# rules compare against.
+gh api graphql -f query='
+  query($owner: String!, $number: Int!) {
+    organization(login: $owner) {
+      projectV2(number: $number) {
+        items(first: 100) { nodes { id createdAt } }
+      }
+    }
+  }' -F owner=<owner> -F number=<project>
 
 # The Project's own configuration.
 gh project field-list <project> --owner <owner> --format json \
@@ -40,11 +58,45 @@ For a user owned Project, replace `organization(login:)` with `user(login:)`.
 If the workflows query fails on the host, the two automation rules are not
 evaluated, with that as the reason.
 
-Body section detection is heading based. A section counts as present when the
-body has a level two heading whose text matches the section, in the repository's
-own template wording when one exists, and it has non-empty content under it. A
-heading followed by nothing, by `TBD`, or by `None` where `None` is not a valid
-answer counts as absent.
+Every collection call above is paged, including the GraphQL `items(first: 100)`.
+A result that comes back at exactly its limit is a page, not the collection.
+Raise the limit or page through before evaluating anything, and report the number
+of objects actually covered. An audit over a truncated collection is clean only
+because it never looked.
+
+## Issue state comes from the Issue list, never from the item list
+
+`gh project item-list` emits only `body`, `number`, `repository`, `title`,
+`type`, and `url` under `.content`. There is no `.content.state` and no
+`.content.createdAt`, so projecting either yields `null` on every item and every
+comparison against it silently passes. Never project a `.content` key that is
+not one of those six.
+
+Join the two collections on `number` instead. The Issue list carries `state` and
+`stateReason`, and each entry's `projectItems[]` carries the `status` value for
+every Project the Issue belongs to, identified by the Project `title`. Match on
+that title, which is the `title` key under `project` in the config file. Both
+state rules read Issue state from this join.
+
+## Body section detection
+
+Detection is heading based. A section counts as present when the body has a level
+two heading whose text matches the section, in the repository's own template
+wording when one exists, and it has non-empty content under it.
+
+**Strip HTML comments before testing a section for content.** The Issue template
+`github-project-setup` writes carries its guidance in an HTML comment under every
+heading, so an Issue submitted from that template with nothing filled in has
+non-empty bytes under every heading. Remove every `<!-- ... -->` span, including
+multi-line ones, then test what is left. Without this step an empty Issue passes
+all four rules that look for a missing section, which is the opposite of what
+those rules are for.
+
+A heading followed by nothing, by whitespace only, or by `TBD` counts as absent.
+`None` also counts as absent, except under `## Non-goals` and
+`## Additional context`: both templates this bucket ships instruct the author to
+write `None` rather than delete a section, so there `None` is a real answer and
+the section counts as present.
 
 ---
 
@@ -234,8 +286,10 @@ answer counts as absent.
 - **Severity**: error
 - **Detects**: an open in-scope Issue that is not an item in the Project, so it
   is invisible to every count and every view.
-- **Find it**: empty `projectItems` on the Issue, or the Issue number absent
-  from the item list.
+- **Find it**: the Issue's own `projectItems` carries no entry whose `title` is
+  the configured Project title. Decide this from the Issue list, not from the
+  item list: `projectItems` travels with the Issue and is not paged, so it cannot
+  report a member as absent because a page filled up.
 - **Expected**: every in-scope Issue is an item in the Project.
 - **Action**: add it, then set `Priority` and `Status`.
 - **Owner**: `github-project-manage`
@@ -245,7 +299,8 @@ answer counts as absent.
 
 - **Severity**: error
 - **Detects**: an item whose `Priority` value is outside `P0`, `P1`, `P2`.
-- **Find it**: `priority` not in the configured set.
+- **Find it**: `priority` is not one of `P0`, `P1`, `P2`. Rule 8 is the only
+  owner of this set; there is no configurable alternative.
 - **Expected**: rule 8 holds exactly.
 - **Action**: set a valid value on the item. If the Project's field itself
   offers the extra option, that is `project.field-option-drift` and belongs to
@@ -257,11 +312,20 @@ answer counts as absent.
 
 - **Severity**: error
 - **Detects**: an item whose `Status` value is outside `Todo`, `In Progress`,
-  `Done`, including any `Blocked` value, which rule 9 forbids.
-- **Find it**: `status` not in the configured set.
-- **Expected**: rule 7 holds exactly.
-- **Action**: move the item to a valid status. A `Blocked` value becomes `Todo`
-  plus a `blocked-by` relation.
+  `Done`, including any `Blocked` value, which rule 9 forbids, **and an item in
+  the Project whose `Status` is unset**. The catalog has no separate rule for a
+  missing status, on purpose: an absent value is a non-standard value, because an
+  item with no `Status` is invisible on a board grouped by `Status` exactly as a
+  `Blocked` item corrupts one.
+- **Find it**: `status` is not one of `Todo`, `In Progress`, `Done`, which
+  includes null, empty, and absent. Rule 7 is the only owner of this set; there
+  is no configurable alternative.
+- **Expected**: rule 7 holds exactly, and every item carries one of the three.
+- **Action**: for a wrong value, move the item to a valid status; a `Blocked`
+  value becomes `Todo` plus a `blocked-by` relation. For an unset value, set
+  `Todo` for an open Issue and `Done` for a closed one, and check
+  `project.automation-item-added-missing`, which is the usual cause of a whole
+  batch of unset values.
 - **Owner**: `github-project-manage`
 - **Auto-fixable**: no
 
@@ -289,8 +353,8 @@ answer counts as absent.
 - **Severity**: error
 - **Detects**: a closed Issue whose Project item is `Todo` or `In Progress`, so
   the board over-counts open work.
-- **Find it**: `itemState` is `CLOSED` and `status` is not the configured done
-  value.
+- **Find it**: in the Issue-list-to-item join, `state` is `CLOSED` and `status`
+  is not `Done`.
 - **Expected**: closed Issues are `Done`.
 - **Action**: re-read once first, since the `Item closed` automation is not
   instant. If it persists across several Issues, the workflow is off and the
@@ -303,7 +367,8 @@ answer counts as absent.
 - **Severity**: error
 - **Detects**: an open Issue whose Project item is `Done`, so the board
   under-counts open work.
-- **Find it**: `itemState` is `OPEN` and `status` is the configured done value.
+- **Find it**: in the Issue-list-to-item join, `state` is `OPEN` and `status` is
+  `Done`.
 - **Expected**: only closed Issues are `Done`.
 - **Action**: decide which is true. Either close the Issue, or move the item
   back to `Todo` or `In Progress`.
@@ -331,9 +396,15 @@ answer counts as absent.
 - **Severity**: warning
 - **Detects**: a draft item that has never become a real Issue, so it has no
   URL, no comments, and no acceptance criteria.
-- **Find it**: `itemType` is `DraftIssue` and `createdAt` is older than the
-  stale threshold, or older than 14 days when none is configured. State which
-  threshold was used.
+- **Find it**: `itemType` is `DraftIssue` in the item list, and the same item's
+  `createdAt`, joined on `id` from the GraphQL items query in the collection
+  block, is older than `audit.draft_age_days` days.
+- **Gate**: evaluated only when `audit.draft_age_days` is configured or the user
+  supplies a threshold. With neither, report the rule as not evaluated and
+  suggest setting one. Never invent a default period, and never borrow
+  `audit.stale_days`: that key is days without an *update* and is read against
+  `updatedAt` by `issue.stale`, while this rule measures age from creation. One
+  number against two clocks answers two different questions.
 - **Expected**: drafts are converted or deleted, not parked.
 - **Action**: convert it to an Issue, or delete it.
 - **Owner**: `github-project-setup`
@@ -367,7 +438,9 @@ answer counts as absent.
 - **Detects**: a `Status` or `Priority` field whose option set is not exactly
   the required one, including case and spacing. `In progress` is drift.
 - **Find it**: compare the option names to `Todo`, `In Progress`, `Done` and to
-  `P0`, `P1`, `P2`.
+  `P0`, `P1`, `P2`. These literals are rules 7 and 8, and they are the same
+  literals `meta.nonstandard-status` and `meta.nonstandard-priority` compare
+  against, so the three rules can never disagree about the same field.
 - **Expected**: rules 7 and 8 hold exactly, with no extra options.
 - **Action**: correct the option set. Report which items would lose a value,
   because replacing the option list removes anything omitted, and renaming an
@@ -381,7 +454,7 @@ answer counts as absent.
 - **Detects**: the `Item added to project` workflow is absent or disabled, so
   new items arrive with no status and disappear from a board grouped by it.
 - **Find it**: the workflows query has no enabled workflow with that name.
-- **Expected**: enabled, setting the configured todo value.
+- **Expected**: enabled, setting `Todo`.
 - **Action**: enable and configure it. This is a web UI operation; the API
   cannot write it.
 - **Owner**: `github-project-setup`
@@ -393,7 +466,7 @@ answer counts as absent.
 - **Detects**: the `Item closed` workflow is absent or disabled, which produces
   `state.closed-not-done` on every closed Issue.
 - **Find it**: the workflows query has no enabled workflow with that name.
-- **Expected**: enabled, setting the configured done value.
+- **Expected**: enabled, setting `Done`.
 - **Action**: enable and configure it. This is a web UI operation; the API
   cannot write it.
 - **Owner**: `github-project-setup`

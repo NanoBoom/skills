@@ -29,31 +29,44 @@ repo: example-repo
 project:
   number: 1
   title: Product Delivery
-status:
-  todo: Todo
-  active: In Progress
-  done: Done
-priority:
-  urgent: P0
-  planned: P1
-  normal: P2
 audit:
   stale_days: 30
+  draft_age_days: 14
   require_assignee: true
   require_priority: true
   require_issue_type: false
 ```
 
+The config file carries no `Status` or `Priority` option names. Rules 7 and 8
+own that vocabulary, they are literal, and the catalog compares against those
+literals. A repository cannot configure its way out of them.
+
+Resolve the Project by `project.number`, then **compare the title the API
+returns to `project.title` and stop on a mismatch**:
+
+```bash
+gh project view <number> --owner <owner> --format json --jq '{number, title, url}'
+```
+
+A config file copied from a sibling repository, or a stale number, resolves to a
+different real Project in the same organization. Every finding in the run would
+then describe the wrong board, and `meta.not-in-project` would fire on the Issues
+that are in the right one. Report the mismatch and the two titles, and let the
+user correct the config; do not guess which is meant.
+
 When the file is absent, derive `owner` and `repo` from
 `gh repo view --json owner,name`, find the Project with `gh project list
---owner <owner> --format json`, and treat the rule 7 and rule 8 names as the
+--owner <owner> --format json`, and use the rule 7 and rule 8 names as the
 expected option sets. Report every derived value and every assumption in the
 output.
 
 `audit.stale_days` has no default. With no configured value and none supplied
 at run time, report `issue.stale` as not evaluated and suggest setting one.
-Never invent a period. The three `audit.require_*` keys gate the matching
-metadata rules the same way: an absent key means the rule is not evaluated.
+Never invent a period. `audit.draft_age_days` gates `project.long-lived-draft`
+the same way and is a separate key on purpose: `stale_days` counts days without
+an update, `draft_age_days` counts days since creation. The three
+`audit.require_*` keys gate the matching metadata rules the same way: an absent
+key means the rule is not evaluated.
 
 ## 2. The twelve rules
 
@@ -124,9 +137,9 @@ a backlog is the kind of change a human has to see first.
 3. Evaluate every rule in the catalog that is applicable and not gated off.
 4. Record, for every rule, one of: findings, passed, or not evaluated with the
    reason. Never omit a rule silently.
-5. **Read `references/report-formats.md` before producing output**, then copy
-   the skeleton for your mode from `assets/audit-report.md`. Both reads are
-   mandatory in every mode.
+5. **Read `references/report-formats.md` before producing output.** It holds both
+   the rules and the copy-ready skeleton for each mode. This read is mandatory in
+   every mode.
 
 ## 6. Status consistency
 
@@ -140,7 +153,14 @@ This is the skill's core check. Every Issue in scope lands in exactly one row.
 | Closed | Todo | `state.closed-not-done` |
 | Closed | In Progress | `state.closed-not-done` |
 | Open | Done | `state.open-in-done` |
+| Open or closed | unset, item is in the Project | `meta.nonstandard-status` |
 | Open, in scope, absent from the Project | none | `meta.not-in-project` |
+
+Issue state comes from `gh issue list`, joined to the Project item on `number`.
+`gh project item-list` does not report Issue state: `.content` carries only
+`body`, `number`, `repository`, `title`, `type`, and `url`, so a check written
+against `.content.state` compares against `null` and passes every row. The
+catalog's collection block has the correct queries.
 
 A closed Issue that is not yet `Done` may simply be waiting on the `Item closed`
 automation. Re-read the item once before reporting it. A repeated
@@ -174,8 +194,8 @@ are fixed by the catalog.
 
 ## 9. Output
 
-Copy the skeleton for your mode from `assets/audit-report.md` and fill it,
-following the rules in `references/report-formats.md` exactly. Every run ends
+Copy the skeleton for your mode from `references/report-formats.md` and fill it,
+following that file's rules exactly. Every run ends
 with, at minimum, the scope that was checked, the findings, the rules that were
 not evaluated and why, and the assumptions made when
 `.github/github-project.yml` was absent. Never drop the `Rules not evaluated`

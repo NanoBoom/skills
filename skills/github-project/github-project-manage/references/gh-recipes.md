@@ -8,6 +8,37 @@ issue dependencies, and Issue Types. Everything else has a typed command.
 Substitute `<owner>`, `<repo>`, and `<project>` from `.github/github-project.yml`
 or from the derivation in section 1 of `SKILL.md`.
 
+## Every list call has a limit, and a filled limit is not an answer
+
+`gh issue list` and `gh project item-list` both page. Pass an explicit `--limit`
+on every one, then check the result count against it. **A list that comes back at
+exactly its limit is truncated, not complete.** Raise the limit and re-run, or
+page, before drawing any conclusion from it, and say in the output how many
+objects were covered.
+
+This matters most where a miss turns into a write. A truncated membership scan
+says the Issue is not in the Project, and the next step adds it, producing a
+second item for the same Issue. So for anything about one specific Issue, use the
+per-Issue query below, which is not paged, rather than searching a page of the
+Project.
+
+```bash
+# Membership, the item id, and the Project title for one Issue. Not paged.
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      issue(number: $number) {
+        projectItems(first: 20) { nodes { id project { number title } } }
+      }
+    }
+  }' -F owner=<owner> -F repo=<repo> -F number=<number>
+```
+
+The typed equivalent, `gh issue view <number> --json projectItems`, is also
+unpaged but returns only the Project title and the field values, not the item id,
+so use it for a membership answer and the GraphQL form when you need the id to
+write.
+
 ## Preflight
 
 ```bash
@@ -39,8 +70,10 @@ gh project field-list <project> --owner <owner> --format json --jq '
 Cache these as `PROJECT_ID`, `STATUS_FIELD_ID`, `PRIORITY_FIELD_ID`, and the
 option IDs for `Todo`, `In Progress`, `Done`, `P0`, `P1`, `P2`.
 
-If a name from the config file has no matching option, stop and report the
-drift. Do not create the option; that is `github-project-setup`'s work.
+If the field has no option named `Todo`, `In Progress`, `Done`, `P0`, `P1`, or
+`P2`, stop and report the drift. Those six names come from rules 7 and 8, not
+from the config file, which carries no option names. Do not create the option;
+that is `github-project-setup`'s work.
 
 ## draft
 
@@ -93,6 +126,11 @@ gh issue list --repo <owner>/<repo> --state all --limit 20 \
   --json number,title,url,state
 ```
 
+If this returns 20 results, the search was too broad and the Issue you are
+looking for may be on the next page. Narrow the search or raise the limit before
+concluding the Issue does not exist, because the branch that follows a miss is
+`gh issue create`.
+
 If it exists, resume at the step that failed. Never run `gh issue create` twice
 for the same requirement.
 
@@ -136,36 +174,58 @@ See `references/issue-relations.md`.
 ## prioritize and move
 
 ```bash
-# Find the item id for an Issue already in the Project.
-gh project item-list <project> --owner <owner> --format json --limit 500 --jq '
-  .items[] | select(.content.number == <number>) | .id'
+# Find the item id for an Issue already in the Project. Use the unpaged
+# per-Issue query from "Every list call has a limit", not an item-list scan.
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      issue(number: $number) {
+        projectItems(first: 20) { nodes { id project { number title } } }
+      }
+    }
+  }' -F owner=<owner> -F repo=<repo> -F number=<number> \
+  --jq '.data.repository.issue.projectItems.nodes[]
+        | select(.project.number == <project>) | .id'
 
 gh project item-edit --id <item-id> --project-id <PROJECT_ID> \
   --field-id <PRIORITY_FIELD_ID> --single-select-option-id <OPTION_ID>
 ```
 
-If the Issue has no item, it is `meta.not-in-project`. Add it first with
-`gh project item-add`, then set the field.
+If that query returns no node for this Project number, the Issue really has no
+item and it is `meta.not-in-project`. Add it with `gh project item-add`, then set
+the field. This is the one place where an unpaged answer is not optional: an
+item-list scan that filled its page would send you down this branch for an Issue
+that is already an item, and the result is a duplicate item.
 
 ## query
 
 ```bash
-# Issues by state, label, assignee.
+# Issues by state, label, assignee. This is also the only source of Issue state.
+# Its projectItems[] carries each Project's title and the item's field values.
 gh issue list --repo <owner>/<repo> --state open --limit 200 \
-  --json number,title,url,state,assignees,labels,updatedAt
+  --json number,title,url,state,stateReason,assignees,labels,updatedAt,projectItems
 
 # Everything in the Project with its field values.
 gh project item-list <project> --owner <owner> --format json --limit 500 --jq '
-  .items[] | {
+  .items[] | select(.archive == null) | {
     type: .content.type,
     number: .content.number,
     title: .content.title,
-    state: .content.state,
     status: .status,
     priority: .priority,
     assignees: .assignees
   }'
 ```
+
+Both of these page. If either returns exactly its `--limit`, the answer is a
+page, not the truth. Raise the limit or page through, and state the number of
+objects covered alongside any count you report. A capped list quietly answers a
+different question than the one the user asked.
+
+`gh project item-list` reports no Issue state. `.content` carries only `body`,
+`number`, `repository`, `title`, `type`, and `url`, so `.content.state` is always
+null. Take `state` from `gh issue list` and join on `number`. The `select(.archive
+== null)` filter drops archived items, which are not live board state.
 
 `gh project item-list` returns pull requests and draft items as well as Issues.
 Filter on `.content.type == "Issue"` when the question is about requirements.
@@ -188,12 +248,14 @@ After a close, re-read the Project item once to see whether automation moved it
 to `Done`:
 
 ```bash
-gh project item-list <project> --owner <owner> --format json --limit 500 --jq '
-  .items[] | select(.content.number == <number>) | {status}'
+gh issue view <number> --repo <owner>/<repo> \
+  --json number,state,projectItems \
+  --jq '.projectItems[] | {project: .title, status: .status.name}'
 ```
 
-If it is still not `Done`, report the lag. Set it by hand only when the user
-asks.
+This is the per-Issue read, so no page limit can make a `Done` item look like a
+missing one. If it is still not `Done`, report the lag. Set it by hand only when
+the user asks.
 
 ## Bulk changes
 
@@ -203,5 +265,11 @@ Print the match count and the full target list before the first write:
 gh issue list --repo <owner>/<repo> --state open --limit 500 \
   --search "<query>" --json number,title --jq 'length'
 ```
+
+**If this returns exactly 500, the count is the limit, not the match count.**
+Rule 11 asks the human to confirm a number, and the writes that follow are not
+capped at 500, so a capped count means they would be confirming a change to fewer
+objects than the change touches. Raise the limit until the result is below it, or
+page and sum, before showing the number. Never present a limit as a count.
 
 Then iterate, verifying each write, and report failures individually.

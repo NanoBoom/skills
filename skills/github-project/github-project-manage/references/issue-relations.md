@@ -34,12 +34,17 @@ silent repair.
 Some `gh` builds expose sub-issues directly:
 
 ```bash
-gh issue edit <child> --repo <owner>/<repo> --add-parent <parent>
+gh issue edit <child> --repo <owner>/<repo> --parent <parent>
 gh issue edit <child> --repo <owner>/<repo> --remove-parent
+
+# From the parent's side, the same relation:
+gh issue edit <parent> --repo <owner>/<repo> --add-sub-issue <child>
+gh issue edit <parent> --repo <owner>/<repo> --remove-sub-issue <child>
 ```
 
-Run `gh issue edit --help` once and check for `--add-parent` before relying on
-it. If the flag is absent, use the GraphQL path.
+The flag that sets a parent is `--parent`, not `--add-parent`. Run
+`gh issue edit --help` once and check for `--parent` before relying on it. If the
+flag is absent, use the GraphQL path.
 
 ### GraphQL fallback
 

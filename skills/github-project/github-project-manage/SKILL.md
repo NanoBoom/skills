@@ -29,15 +29,25 @@ repo: example-repo
 project:
   number: 1
   title: Product Delivery
-status:
-  todo: Todo
-  active: In Progress
-  done: Done
-priority:
-  urgent: P0
-  planned: P1
-  normal: P2
 ```
+
+Those four values are all this skill reads. The `Status` and `Priority` option
+names are not configurable: rules 7 and 8 own them, and this skill uses those
+literals.
+
+Resolve the Project by `project.number`, then **compare the title the API returns
+to `project.title` and stop on a mismatch**:
+
+```bash
+gh project view <number> --owner <owner> --format json --jq '{number, title, url}'
+```
+
+A config file copied from a sibling repository, or a stale number, resolves to a
+different real Project in the same organization, and this skill writes. The
+create transaction would file the Issue onto that other board, step 7 would read
+back the item it had just created there and confirm it, and the output block
+would print the other Project's title with nothing calling it wrong. Report both
+titles and stop. Do not guess which Project is meant.
 
 When the file is absent, derive `owner` and `repo` from
 `gh repo view --json owner,name,nameWithOwner`, and find the Project with
@@ -46,8 +56,10 @@ linked to the repository, use it. If several are, ask. Report every derived
 value and every assumption you made in the output block, and suggest running
 `github-project-setup` to write the config file.
 
-If the config file names option values that the Project does not have, stop
-before writing and report the drift. Do not invent an option.
+If the Project's `Status` or `Priority` field does not offer the rule 7 and rule 8
+option names, stop before writing and report the drift as
+`project.field-option-drift`, which `github-project-setup` owns. Do not invent an
+option and do not write a value the field does not have.
 
 ## 2. The twelve rules
 
@@ -139,7 +151,12 @@ the same requirement because a later step failed.
 Every write is query, then modify, then verify. Treat each of these as already
 satisfied, report it as such, and change nothing:
 
-- the Issue is already an item in the Project;
+- the Issue is already an item in the Project. Decide this with the per-Issue
+  membership query in `references/gh-recipes.md`, never by scanning a page of
+  `gh project item-list`. A scan that fills its limit reports a member as absent,
+  and the miss branch here is `gh project item-add`, which then creates a second
+  item for the same Issue. That is `project.duplicate-item`, an `error` in the
+  audit catalog, manufactured by this skill;
 - the Assignee, Label, or Issue Type is already set to the requested value;
 - the parent, child, or dependency relation already exists;
 - the Issue is already closed, or already open;
@@ -235,6 +252,7 @@ GitHub, not from what was sent.
   Type: <type or "unset">
   Parent: #<number> (or "none")
   Blocked by: #<number>, ... (or "none")
+  Blocking: #<number>, ... (or "none")
 
 ## Assumptions
 

@@ -22,22 +22,16 @@ project:
   # The Project title, used to find it when the number is wrong or missing.
   title: Product Delivery
 
-# The exact option names of the single select `Status` field. These must match
-# the Project character for character, including case and spacing. The three
-# keys are fixed; only the values are yours to change, and changing one means
-# renaming the option in the Project too.
-status:
-  todo: Todo
-  active: In Progress
-  done: Done
-
-# The exact option names of the single select `Priority` field. Same rule.
+# There are deliberately no `status:` or `priority:` keys here. The option sets
+# are fixed by rules 7 and 8: `Status` is exactly `Todo`, `In Progress`, `Done`,
+# and `Priority` is exactly `P0`, `P1`, `P2`. The three skills compare the
+# Project against those literals, and github-project-audit reports anything else
+# as project.field-option-drift. A configurable set would mean the rule that
+# catches drift and the rules that judge items could disagree about the same
+# field, so the vocabulary has one owner and it is not this file.
+#
 # P0 is drop everything. P1 is planned for the current cycle. P2 is everything
 # else that is still real work.
-priority:
-  urgent: P0
-  planned: P1
-  normal: P2
 
 audit:
   # Days without an update before github-project-audit reports issue.stale.
@@ -45,6 +39,12 @@ audit:
   # and no threshold supplied at run time, the rule is reported as not
   # evaluated rather than guessed.
   stale_days: 30
+
+  # Days since creation before project.long-lived-draft reports a draft item
+  # that never became a real Issue. A separate key from stale_days on purpose:
+  # this one measures age from creation, stale_days measures time since the last
+  # update. Remove it to turn the rule off; there is no default here either.
+  draft_age_days: 14
 
   # Each of these gates one warning in the audit catalog. Set a key to false
   # and the matching rule is not reported.

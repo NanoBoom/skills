@@ -8,7 +8,15 @@ assignees: []
 
 <!--
 Keep all five headings. An empty heading is a visible gap; a missing heading is
-invisible. Write "None" rather than deleting a section.
+invisible.
+
+Replace each comment below with real content. The comments are guidance, not an
+answer: an audit strips them before deciding whether a section was filled in, so
+an Issue submitted with them left in place reads as empty.
+
+"None" is a real answer under Non-goals and Additional context only. Under
+Background and goal, Scope, or Acceptance criteria it reads as absent, because
+those three are what make the Issue deliverable.
 -->
 
 ## Background and goal

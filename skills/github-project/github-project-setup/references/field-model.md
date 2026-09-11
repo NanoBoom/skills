@@ -76,18 +76,30 @@ containing a comma are not expressible; do not use any.
 `gh` has no typed command to add an option to an existing single select field.
 Use the GraphQL mutation, which replaces the whole option list:
 
+`-f` and `-F` send scalars. A `[ProjectV2SingleSelectFieldOptionInput!]!`
+variable bound with either is rejected as "expected to be a key-value object"
+before the request reaches field validation, so the option list has to travel as
+real JSON. Send the whole payload on stdin with `--input -`:
+
 ```bash
-gh api graphql -f query='
-  mutation($field: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) {
-    updateProjectV2Field(input: { fieldId: $field, singleSelectOptions: $options }) {
-      projectV2Field { ... on ProjectV2SingleSelectField { id name options { id name } } }
-    }
-  }' -f field=<FIELD_ID> -f options='[
-    {"name":"Todo","color":"GRAY","description":""},
-    {"name":"In Progress","color":"YELLOW","description":""},
-    {"name":"Done","color":"GREEN","description":""}
-  ]'
+cat <<'JSON' | gh api graphql --input -
+{
+  "query": "mutation($field: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]!) { updateProjectV2Field(input: { fieldId: $field, singleSelectOptions: $options }) { projectV2Field { ... on ProjectV2SingleSelectField { id name options { id name } } } } }",
+  "variables": {
+    "field": "<FIELD_ID>",
+    "options": [
+      {"name": "Todo", "color": "GRAY", "description": ""},
+      {"name": "In Progress", "color": "YELLOW", "description": ""},
+      {"name": "Done", "color": "GREEN", "description": ""}
+    ]
+  }
+}
+JSON
 ```
+
+With `--input -`, `query` and `variables` are the two keys of one JSON document,
+and every variable keeps its real type. The same applies to any other non-scalar
+variable: a list or an input object cannot be bound with `-f`.
 
 Three things to know before running it:
 
