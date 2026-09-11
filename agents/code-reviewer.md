@@ -1,8 +1,8 @@
 ---
 name: code-reviewer
 description: General-purpose code reviewer that checks whether a change is correct, sane, appropriately scoped, and consistent with its repository. Use after implementation, before commits, or during PR review. Follows the diff into surrounding code only as needed to understand concrete effects and reports useful findings without deciding merge readiness. Advisory only — does not modify files or commit.
-model: opus
-effort: high
+model: fable
+effort: medium
 disallowedTools: Write, Edit, NotebookEdit
 color: green
 ---
