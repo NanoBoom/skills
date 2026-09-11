@@ -1,0 +1,254 @@
+# Report formats
+
+The rules every audit output obeys, and the copy-ready skeleton for each of the
+three modes, in one file. The skeleton is what gets copied, so a skeleton that
+omits a field the rules define is that field disappearing. No skeleton restates
+the per-finding block: all three point at the one definition above, which is the
+only thing that actually keeps them from drifting apart. Proximity is not a
+guarantee.
+
+Every skeleton carries `## Rules not evaluated` and `## Assumptions`, in every
+mode, for the same reason. Delete no heading from a skeleton. A heading with
+`None` under it says the check ran and found nothing. A missing heading says
+nothing at all, and the reader cannot tell a clean result from a skipped one.
+
+## The per-finding block
+
+Every finding carries all eight fields. None is optional, and none is left for
+the reader to infer.
+
+```markdown
+### [<severity>] <rule-id> - <object>
+
+- Current: <what is true now, read from GitHub>
+- Expected: <what the rule requires>
+- Action: <the concrete change, in the imperative>
+- Fix with: <github-project-manage | github-project-setup>
+- Auto-fixable: <yes | no><, with the condition when it is conditional>
+```
+
+- `<severity>` is `error`, `warning`, or `info`, taken from the catalog and
+  never re-ranked to make a report look better or worse.
+- `<object>` is `#<number> <title>` for an Issue, `item <id>` for a draft or a
+  pull request item, or `field Status` for a Project field.
+- `Current` is read back from GitHub, never restated from the request or from
+  what a previous run reported.
+- `Action` says what to change. It never says it was changed, and it never
+  reads as a completed fix (rule 10).
+- `Fix with` is the owning skill from the catalog. It is what makes the report
+  actionable without a fix mode.
+- `Auto-fixable` carries the catalog's condition when the catalog states one,
+  and the suffix is not decoration. `project.contains-pull-request` is
+  auto-fixable "removing the item. Removal needs an explicit request", and a
+  bare `yes` invites a reader to remove Project items without the request rule
+  10 demands.
+
+Worked example:
+
+```markdown
+### [error] state.closed-not-done - #142 Export orders CSV completes for large accounts
+
+- Current: Issue is CLOSED, Project item Status is In Progress
+- Expected: closed Issues are Done
+- Action: move item 142 to Done, or enable the Item closed workflow, which is
+  the cause if other closed Issues show the same thing
+- Fix with: github-project-manage
+- Auto-fixable: yes, per item
+```
+
+## Grouping repeated findings
+
+When one rule fires on many objects with one underlying cause, use a single
+block with an object list rather than one block per object:
+
+```markdown
+### [error] state.closed-not-done - 14 Issues
+
+- Objects: #101, #104, #108, #112, #115, #118, #120, #123, #127, #130, #133,
+  #136, #139, #142
+- Current: all closed, all still Todo or In Progress
+- Expected: closed Issues are Done
+- Action: enable and configure the Item closed workflow, then correct the 14
+  existing items
+- Fix with: github-project-setup, then github-project-manage
+- Auto-fixable: no for the workflow, yes per item
+```
+
+Forty findings that share one cause are one problem. Reporting them forty times
+buries the cause.
+
+## Ordering
+
+Errors first, then warnings, then info. Within one severity, order by rule ID,
+so two runs of the same audit are comparable line by line.
+
+## Rules not evaluated
+
+This section is never omitted and never left empty when a rule was gated off or
+unevaluable. A rule that was skipped and a rule that passed look identical
+otherwise, which is the whole failure this section prevents. One line each, with
+what would enable it:
+
+```markdown
+- issue.stale: the stale threshold is not configured and none was supplied.
+  Set audit.stale_days to enable it.
+- meta.missing-issue-type: the owner has no Issue Types defined.
+- project.automation-item-added-missing: the workflows query is unavailable on
+  this host.
+```
+
+## The `audit` skeleton
+
+```markdown
+## Audit
+
+Repository: <owner>/<repo>
+Project: <title> #<number>
+Mode: audit
+Scope: <n> Issues, <m> Project items, <what was included>
+
+## Findings
+
+<Per-finding blocks, errors first, then warnings, then info.>
+
+## Rules not evaluated
+
+- <rule-id>: <why, and what would enable it>
+
+## Additional observations
+
+<Real problems no catalog rule covers, marked as outside the catalog, or "None".>
+
+## Assumptions
+
+<Derived values when the repository config file was absent, or "None".>
+```
+
+## Rollups in `report` mode
+
+Rollups come before the findings, not after: the reader wants the shape first.
+Three rollups, by severity, by assignee, and by rule.
+
+Counts must agree across all three rollups and with the finding list. A rollup
+that does not add up is worse than no rollup, because it is believed. Two counts
+differ on purpose and must be labelled: `Findings` counts blocks, `Objects`
+counts distinct Issues and items, and a grouped block contributes one finding
+and many objects.
+
+A Project item with no Issue, a draft, or a pull request item has no assignee
+and belongs in the `unassigned` row. Add a line under the table saying so when
+that row is large enough to mislead.
+
+`What to do first` lists at most five actions, ordered by severity and then by
+how many findings each one clears, and names the skill to invoke for each. When
+there are no errors and no warnings, write `Nothing. No errors or warnings.`
+
+### The `report` skeleton
+
+```markdown
+## Issue management report
+
+Repository: <owner>/<repo>
+Project: <title> #<number>
+Period: <what was covered>
+Scope: <n> Issues, <m> Project items
+
+## By severity
+
+| Severity | Findings | Objects |
+|---|---|---|
+| error | <n> | <n> |
+| warning | <n> | <n> |
+| info | <n> | <n> |
+
+## By assignee
+
+| Assignee | error | warning | info | Total |
+|---|---|---|---|---|
+| <login> | <n> | <n> | <n> | <n> |
+| unassigned | <n> | <n> | <n> | <n> |
+
+## By rule
+
+| Rule | Severity | Count | Fix with |
+|---|---|---|---|
+| <rule-id> | <severity> | <n> | <owning skill> |
+
+## What to do first
+
+1. <Action, the skill to invoke, and how many findings it clears.>
+
+## Findings
+
+<Per-finding blocks, errors first, then warnings, then info.>
+
+## Rules not evaluated
+
+- <rule-id>: <why, and what would enable it>
+
+## Additional observations
+
+<Real problems no catalog rule covers, marked as outside the catalog, or "None".>
+
+## Assumptions
+
+<Derived values when the repository config file was absent, or "None".>
+```
+
+## `verify` mode
+
+`verify` re-checks only the named Issues or rule IDs. Its job is to say whether
+a fix worked, so it sorts the re-checked scope into four buckets and never
+silently re-audits the whole Project.
+
+`Newly introduced` is the bucket that earns the mode. A fix that clears
+`meta.not-in-project` by adding an item, and leaves that item with no
+`Priority`, has traded an error for a warning, and the report has to say so.
+
+`Not re-checked` exists so a narrow verification is never read as a clean audit.
+
+If a named object no longer exists, say that rather than reporting it as
+resolved. A deleted Issue is not a fixed Issue.
+
+### The `verify` skeleton
+
+```markdown
+## Verification
+
+Repository: <owner>/<repo>
+Project: <title> #<number>
+Re-checked: <the rule ids and objects that were named>
+
+## Resolved
+
+- <rule-id> - <object>: <what is true now that satisfies the rule>
+
+## Still failing
+
+<Per-finding blocks, unchanged format.>
+
+## Newly introduced
+
+<Per-finding blocks for anything that was not failing before and is now, inside
+the re-checked scope.>
+
+## Not re-checked
+
+<Anything in the original findings that was outside the named scope, so this is
+not read as a clean audit.>
+
+## Rules not evaluated
+
+- <rule-id>: <why, and what would enable it>
+
+## Assumptions
+
+<Derived values when the repository config file was absent, or "None".>
+```
+
+`Rules not evaluated` matters most in this mode, not least. A named rule that
+could not be re-evaluated and a named rule that now passes render identically
+without it, so a fix that was never confirmed reads as confirmed. `Not
+re-checked` does not cover this: that section is for rules deliberately left
+outside the scope, and this one is for a rule inside the scope that could not be
+answered.

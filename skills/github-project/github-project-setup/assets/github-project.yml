@@ -1,0 +1,53 @@
+# .github/github-project.yml
+#
+# The runtime source of truth for the three github-project skills. Written by
+# github-project-setup; read by all three. Commit it to the repository.
+#
+# When this file is absent, each skill derives what it can from the current
+# repository and from GitHub, and reports the derived values and the
+# assumptions it made. Writing the file removes that guesswork.
+#
+# Replace every value below with the real one. Do not leave the examples.
+
+# The account or organization that owns the repository and the Project.
+owner: example-org
+
+# The repository whose Issues are the requirements.
+repo: example-repo
+
+project:
+  # The Projects v2 number, visible in the Project URL. Classic Projects are
+  # not supported.
+  number: 1
+  # The Project title, used to find it when the number is wrong or missing.
+  title: Product Delivery
+
+# There are deliberately no `status:` or `priority:` keys here. The option sets
+# are fixed by rules 7 and 8: `Status` is exactly `Todo`, `In Progress`, `Done`,
+# and `Priority` is exactly `P0`, `P1`, `P2`. The three skills compare the
+# Project against those literals, and github-project-audit reports anything else
+# as project.field-option-drift. A configurable set would mean the rule that
+# catches drift and the rules that judge items could disagree about the same
+# field, so the vocabulary has one owner and it is not this file.
+#
+# P0 is drop everything. P1 is planned for the current cycle. P2 is everything
+# else that is still real work.
+
+audit:
+  # Days without an update before github-project-audit reports issue.stale.
+  # Remove this key to turn the rule off. There is no default: with no value
+  # and no threshold supplied at run time, the rule is reported as not
+  # evaluated rather than guessed.
+  stale_days: 30
+
+  # Days since creation before project.long-lived-draft reports a draft item
+  # that never became a real Issue. A separate key from stale_days on purpose:
+  # this one measures age from creation, stale_days measures time since the last
+  # update. Remove it to turn the rule off; there is no default here either.
+  draft_age_days: 14
+
+  # Each of these gates one warning in the audit catalog. Set a key to false
+  # and the matching rule is not reported.
+  require_assignee: true   # meta.missing-assignee
+  require_priority: true   # meta.missing-priority
+  require_issue_type: false  # meta.missing-issue-type, an owner level feature
