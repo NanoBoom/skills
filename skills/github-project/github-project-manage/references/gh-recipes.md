@@ -12,16 +12,19 @@ or from the derivation in section 1 of `SKILL.md`.
 
 This applies to every list call in this bucket, not to a remembered list of
 command names. If a call returns a collection, it is paged: `gh issue list`,
-`gh project list`, `gh project item-list`, and every GraphQL connection
-(`projectItems`, `subIssues`, `items`). Before drawing any conclusion from one,
-prove it is the whole collection and say in the output how many objects were
-covered.
+`gh project list`, `gh project item-list`, `gh project field-list`, every
+GraphQL connection (`projectItems`, `subIssues`, `items`), and every `gh api`
+REST endpoint that answers with an array. Before drawing any conclusion from
+one, prove it is the whole collection and say in the output how many objects
+were covered.
 
-- **`gh project list` and `gh project item-list` return `totalCount` beside the
-  array.** Compare the array length to `totalCount`. That is an exact answer
-  rather than a heuristic, so prefer it wherever it exists. `gh project list`
-  also defaults to 30 and omits closed Projects entirely: pass `--limit` and
-  `--closed`.
+- **`gh project list`, `gh project item-list`, and `gh project field-list`
+  return `totalCount` beside the array.** Compare the array length to
+  `totalCount`. That is an exact answer rather than a heuristic, so prefer it
+  wherever it exists. A `--jq` that starts at `.projects[]`, `.items[]`, or
+  `.fields[]` throws the count away, so select it alongside. All three default
+  to 30, and `gh project list` also omits closed Projects entirely: pass
+  `--limit`, and pass `--closed` to that one.
 - **`gh issue list` reports no count.** Pass an explicit `--limit` and treat a
   result that comes back at exactly the limit as truncated, not complete. Raise
   it and re-run, or page.
@@ -30,6 +33,8 @@ covered.
   through an `$after: String` argument until `hasNextPage` is false. Do not
   raise `first` past 100 to avoid the loop: the server rejects it with
   `EXCESSIVE_PAGINATION`, `exceeds the first limit of 100 records`.
+- **A REST array carries neither.** It pages at 30 through the `Link` header, so
+  pass `gh api --paginate` and let it follow the header.
 
 This matters most where a miss turns into a write. A truncated membership scan
 says the Issue is not in the Project, and the next step adds it, producing a
@@ -89,14 +94,21 @@ Project field writes take IDs, not names. Fetch them once and reuse them.
 # Project node id.
 gh project view <project> --owner <owner> --format json --jq '.id'
 
-# Field ids and single-select option ids.
-gh project field-list <project> --owner <owner> --format json --jq '
-  .fields[] | select(.type=="ProjectV2SingleSelectField")
-  | {field: .name, id: .id, options: [.options[] | {name, id}]}'
+# Field ids and single-select option ids. This call defaults to 30 fields, so
+# --limit is required, and totalCount is selected because the miss below is
+# reported as drift.
+gh project field-list <project> --owner <owner> --limit 100 --format json --jq '
+  {totalCount, returned: (.fields | length),
+   fields: [.fields[] | select(.type=="ProjectV2SingleSelectField")
+            | {field: .name, id: .id, options: [.options[] | {name, id}]}]}'
 ```
 
 Cache these as `PROJECT_ID`, `STATUS_FIELD_ID`, `PRIORITY_FIELD_ID`, and the
 option IDs for `Todo`, `In Progress`, `Done`, `P0`, `P1`, `P2`.
+
+If `returned` is below `totalCount`, page before concluding anything: a
+truncated field list makes a configured field look absent and its options look
+missing.
 
 If the field has no option named `Todo`, `In Progress`, `Done`, `P0`, `P1`, or
 `P2`, stop and report the drift. Those six names come from rules 7 and 8, not

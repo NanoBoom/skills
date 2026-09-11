@@ -93,7 +93,9 @@ write only where the step reports a gap the user agreed to fix.
    populated; a stale number is exactly the case a populated file hides.
 4. **Create and link the Project** when needed.
 5. **Status and Priority fields.** Check that both exist, are single select, and
-   have exactly the option sets from rules 7 and 8. Read
+   have exactly the option sets from rules 7 and 8. `gh project field-list` is
+   paged the same way and a miss creates here too, so pass `--limit` and check
+   the returned length against `totalCount` before calling a field missing. Read
    `references/field-model.md` before creating or changing a field.
 6. **Board and Backlog views.** Check them. Read `references/field-model.md`
    for what the API can and cannot do here.

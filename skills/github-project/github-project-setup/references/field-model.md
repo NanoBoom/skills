@@ -46,9 +46,13 @@ gh project list --owner <owner> --limit 100 --closed --format json \
 # Project node id, needed for every field mutation.
 gh project view <project> --owner <owner> --format json --jq '{id, title, number, url}'
 
-# Fields, with single select option names and ids.
-gh project field-list <project> --owner <owner> --format json --jq '
-  .fields[] | {name, id, type, options: (.options // [] | map(.name))}'
+# Fields, with single select option names and ids. This call defaults to 30
+# fields, so --limit is required. Compare the returned length to totalCount
+# before concluding that a field does not exist; that conclusion is what leads
+# to creating one, and a Project already carrying Status would get a second.
+gh project field-list <project> --owner <owner> --limit 100 --format json --jq '
+  {totalCount, returned: (.fields | length),
+   fields: [.fields[] | {name, id, type, options: (.options // [] | map(.name))}]}'
 ```
 
 Compare the reported option names to the table above, exactly, including case

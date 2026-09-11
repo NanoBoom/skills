@@ -54,9 +54,13 @@ gh api graphql -f query='
     }
   }' -F owner=<owner> -F number=<project> -F after=<cursor-or-null>
 
-# The Project's own configuration.
-gh project field-list <project> --owner <owner> --format json \
-  --jq '.fields[] | {name, type, options: (.options // [] | map(.name))}'
+# The Project's own configuration. This call defaults to 30 fields, and
+# project.missing-field and project.field-option-drift both conclude "missing"
+# from its result, so pass --limit and keep totalCount rather than projecting it
+# away.
+gh project field-list <project> --owner <owner> --limit 100 --format json \
+  --jq '{totalCount, returned: (.fields | length),
+         fields: [.fields[] | {name, type, options: (.options // [] | map(.name))}]}'
 
 # Twenty covers GitHub's built-in workflow set with room to spare, but the two
 # automation rules conclude "absent" from this result, so check totalCount
@@ -522,7 +526,9 @@ the section counts as present.
 - **Detects**: the Project has no `Status` field or no `Priority` field, so
   every metadata rule below it is unevaluable.
 - **Find it**: the field list has no entry with that name and type
-  `ProjectV2SingleSelectField`.
+  `ProjectV2SingleSelectField`, in a field list whose completeness you proved
+  against `totalCount`. The action here creates a field, so a truncated read
+  gives the Project a second `Status`.
 - **Expected**: both fields exist as single selects.
 - **Action**: create the missing field with its exact option set.
 - **Owner**: `github-project-setup`

@@ -135,8 +135,9 @@ a backlog is the kind of change a human has to see first.
 2. Collect the data once: the Issues, the Project items and their field values,
    and the Project fields and workflows. The catalog gives the commands and the
    paging guard for each of them. Every call that returns a collection is paged,
-   including `gh project list` and the GraphQL connections, and a truncated
-   collection produces an audit that is clean only because it never looked.
+   including `gh project list`, `gh project field-list`, and the GraphQL
+   connections, and a truncated collection produces an audit that is clean only
+   because it never looked.
    Where the response carries `totalCount`, compare it to what you received;
    where it does not, treat a result equal to the limit as a page. Then say in
    the output how many objects were covered.

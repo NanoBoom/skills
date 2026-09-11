@@ -113,10 +113,13 @@ gh api --method POST \
   repos/<owner>/<repo>/issues/<issue>/dependencies/blocked_by \
   -F issue_id=<blocker-database-id>
 
-# Read back.
-gh api repos/<owner>/<repo>/issues/<issue>/dependencies/blocked_by \
+# Read back. Both endpoints are REST lists and page at 30, so --paginate is
+# required: without it a read-back on an Issue with more relations than that can
+# fail to show the one just written, and the verify step would report a
+# successful write as lost.
+gh api --paginate repos/<owner>/<repo>/issues/<issue>/dependencies/blocked_by \
   --jq '.[] | {number, title, state}'
-gh api repos/<owner>/<repo>/issues/<issue>/dependencies/blocking \
+gh api --paginate repos/<owner>/<repo>/issues/<issue>/dependencies/blocking \
   --jq '.[] | {number, title, state}'
 ```
 
