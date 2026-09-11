@@ -17,6 +17,10 @@ an Issue submitted with them left in place reads as empty.
 "None" is a real answer under Non-goals and Additional context only. Under
 Background and goal, Scope, or Acceptance criteria it reads as absent, because
 those three are what make the Issue deliverable.
+
+The two empty checkboxes below are placeholders in the same way the comments
+are. An audit counts only a checkbox with text after the marker, so submitting
+them untouched reads as no acceptance criteria at all.
 -->
 
 ## Background and goal

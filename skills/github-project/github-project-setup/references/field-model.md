@@ -35,7 +35,13 @@ with more levels stops being used consistently and stops ordering anything.
 
 ```bash
 # Does a Project exist for this owner, and which are linked here?
-gh project list --owner <owner> --format json --jq '.projects[] | {number, title, url, closed}'
+# This call defaults to 30 Projects and to open ones only, so --limit and
+# --closed are both required. Compare the returned length to totalCount before
+# concluding that a Project does not exist; that conclusion is what leads to
+# creating one.
+gh project list --owner <owner> --limit 100 --closed --format json \
+  --jq '{totalCount, returned: (.projects | length),
+         projects: [.projects[] | {number, title, url, closed}]}'
 
 # Project node id, needed for every field mutation.
 gh project view <project> --owner <owner> --format json --jq '{id, title, number, url}'
@@ -133,14 +139,16 @@ gh api graphql -f query='
   query($owner: String!, $number: Int!) {
     organization(login: $owner) {
       projectV2(number: $number) {
-        views(first: 20) { nodes { name layout } }
+        views(first: 20) { totalCount nodes { name layout } }
       }
     }
   }' -F owner=<owner> -F number=<project>
 ```
 
 For a user owned Project, replace `organization(login:)` with `user(login:)`.
-If both fail, report the views as `needs web UI` rather than guessing.
+If both fail, report the views as `needs web UI` rather than guessing. Compare
+`totalCount` to what came back before reporting a view as missing: a Project
+past twenty views would otherwise be told to create a `Board` it already has.
 
 When a view is missing, report it with the exact steps:
 

@@ -8,43 +8,71 @@ issue dependencies, and Issue Types. Everything else has a typed command.
 Substitute `<owner>`, `<repo>`, and `<project>` from `.github/github-project.yml`
 or from the derivation in section 1 of `SKILL.md`.
 
-## Every list call has a limit, and a filled limit is not an answer
+## Every list call is paged, and a filled limit is not an answer
 
-`gh issue list` and `gh project item-list` both page. Pass an explicit `--limit`
-on every one, then check the result count against it. **A list that comes back at
-exactly its limit is truncated, not complete.** Raise the limit and re-run, or
-page, before drawing any conclusion from it, and say in the output how many
-objects were covered.
+This applies to every list call in this bucket, not to a remembered list of
+command names. If a call returns a collection, it is paged: `gh issue list`,
+`gh project list`, `gh project item-list`, and every GraphQL connection
+(`projectItems`, `subIssues`, `items`). Before drawing any conclusion from one,
+prove it is the whole collection and say in the output how many objects were
+covered.
+
+- **`gh project list` and `gh project item-list` return `totalCount` beside the
+  array.** Compare the array length to `totalCount`. That is an exact answer
+  rather than a heuristic, so prefer it wherever it exists. `gh project list`
+  also defaults to 30 and omits closed Projects entirely: pass `--limit` and
+  `--closed`.
+- **`gh issue list` reports no count.** Pass an explicit `--limit` and treat a
+  result that comes back at exactly the limit as truncated, not complete. Raise
+  it and re-run, or page.
+- **A GraphQL connection carries `totalCount` and
+  `pageInfo { hasNextPage endCursor }`.** Select them, and follow `endCursor`
+  through an `$after: String` argument until `hasNextPage` is false. Do not
+  raise `first` past 100 to avoid the loop: the server rejects it with
+  `EXCESSIVE_PAGINATION`, `exceeds the first limit of 100 records`.
 
 This matters most where a miss turns into a write. A truncated membership scan
 says the Issue is not in the Project, and the next step adds it, producing a
 second item for the same Issue. So for anything about one specific Issue, use the
-per-Issue query below, which is not paged, rather than searching a page of the
-Project.
+per-Issue query below rather than searching a page of the Project.
 
 ```bash
-# Membership, the item id, and the Project title for one Issue. Not paged.
+# Membership, the item id, and the Project title for one Issue.
 gh api graphql -f query='
   query($owner: String!, $repo: String!, $number: Int!) {
     repository(owner: $owner, name: $repo) {
       issue(number: $number) {
-        projectItems(first: 20) { nodes { id project { number title } } }
+        projectItems(first: 20) {
+          totalCount
+          pageInfo { hasNextPage endCursor }
+          nodes { id project { number title } }
+        }
       }
     }
   }' -F owner=<owner> -F repo=<repo> -F number=<number>
 ```
 
-The typed equivalent, `gh issue view <number> --json projectItems`, is also
-unpaged but returns only the Project title and the field values, not the item id,
-so use it for a membership answer and the GraphQL form when you need the id to
-write.
+One Issue in more than twenty Projects is rare, which is the reason to select
+`totalCount` rather than to assume: if it exceeds the twenty returned, page with
+`$after` before deciding the Issue is not a member. This is the one query whose
+scope is a single Issue, so it cannot be truncated by other Issues on the board,
+which is what makes it the right call for a membership question.
+
+The typed equivalent, `gh issue view <number> --json projectItems`, returns every
+Project the Issue belongs to but only the Project title and the field values, not
+the item id, so use it for a membership answer and the GraphQL form when you need
+the id to write.
 
 ## Preflight
 
 ```bash
 gh auth status
 gh repo view --json owner,name,nameWithOwner,defaultBranchRef
-gh project list --owner <owner> --format json
+
+# --limit and --closed are both required: this call defaults to 30 and to open
+# Projects only. Check the returned array length against totalCount.
+gh project list --owner <owner> --limit 100 --closed --format json \
+  --jq '{totalCount, returned: (.projects | length), projects: [.projects[] | {number, title, closed}]}'
 ```
 
 If a Project call fails with an insufficient scope error:
@@ -108,9 +136,11 @@ gh project item-edit --id <item-id> --project-id <PROJECT_ID> \
 gh project item-edit --id <item-id> --project-id <PROJECT_ID> \
   --field-id <STATUS_FIELD_ID> --single-select-option-id <TODO_OPTION_ID>
 
-# 7. Read back.
+# 7. Read back. issueType is requested because the output block renders a
+# `Type:` line, and every line in that block is read back rather than restated
+# from what was sent. It comes back null when the owner has no Issue Types.
 gh issue view <number> --repo <owner>/<repo> \
-  --json number,title,url,state,assignees,labels,projectItems
+  --json number,title,url,state,assignees,labels,issueType,projectItems
 ```
 
 Note that `gh issue create --body-file -` reads stdin, which avoids quoting
@@ -149,7 +179,8 @@ than failing the run.
 ## refine and edit
 
 ```bash
-gh issue view <number> --repo <owner>/<repo> --json number,title,body,labels,assignees,state
+gh issue view <number> --repo <owner>/<repo> \
+  --json number,title,body,labels,assignees,state,issueType
 # Edit the body in a file, then:
 gh issue edit <number> --repo <owner>/<repo> --body-file /tmp/issue-body.md
 gh issue edit <number> --repo <owner>/<repo> --title "<title>"
@@ -173,17 +204,11 @@ See `references/issue-relations.md`.
 
 ## prioritize and move
 
+Find the item id with the per-Issue membership query from
+*Every list call is paged*, not with an item-list scan. Run that query
+unchanged and add this selector:
+
 ```bash
-# Find the item id for an Issue already in the Project. Use the unpaged
-# per-Issue query from "Every list call has a limit", not an item-list scan.
-gh api graphql -f query='
-  query($owner: String!, $repo: String!, $number: Int!) {
-    repository(owner: $owner, name: $repo) {
-      issue(number: $number) {
-        projectItems(first: 20) { nodes { id project { number title } } }
-      }
-    }
-  }' -F owner=<owner> -F repo=<repo> -F number=<number> \
   --jq '.data.repository.issue.projectItems.nodes[]
         | select(.project.number == <project>) | .id'
 
@@ -191,9 +216,10 @@ gh project item-edit --id <item-id> --project-id <PROJECT_ID> \
   --field-id <PRIORITY_FIELD_ID> --single-select-option-id <OPTION_ID>
 ```
 
-If that query returns no node for this Project number, the Issue really has no
-item and it is `meta.not-in-project`. Add it with `gh project item-add`, then set
-the field. This is the one place where an unpaged answer is not optional: an
+If that query returns no node for this Project number, and its `totalCount`
+matches what it returned, the Issue really has no item and it is
+`meta.not-in-project`. Add it with `gh project item-add`, then set the field.
+This is the one place where a proven-complete answer is not optional: an
 item-list scan that filled its page would send you down this branch for an Issue
 that is already an item, and the result is a duplicate item.
 
@@ -217,9 +243,11 @@ gh project item-list <project> --owner <owner> --format json --limit 500 --jq '
   }'
 ```
 
-Both of these page. If either returns exactly its `--limit`, the answer is a
-page, not the truth. Raise the limit or page through, and state the number of
-objects covered alongside any count you report. A capped list quietly answers a
+Both of these page. `gh project item-list` returns `totalCount` beside `.items`,
+so compare the two and settle it exactly. `gh issue list` returns no count, so
+treat a result that is exactly its `--limit` as a page rather than the truth.
+Either way, raise the limit or page through, and state the number of objects
+covered alongside any count you report. A capped list quietly answers a
 different question than the one the user asked.
 
 `gh project item-list` reports no Issue state. `.content` carries only `body`,

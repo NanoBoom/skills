@@ -56,9 +56,12 @@ user correct the config; do not guess which is meant.
 
 When the file is absent, derive `owner` and `repo` from
 `gh repo view --json owner,name`, find the Project with `gh project list
---owner <owner> --format json`, and use the rule 7 and rule 8 names as the
-expected option sets. Report every derived value and every assumption in the
-output.
+--owner <owner> --limit 100 --closed --format json`, and use the rule 7 and rule
+8 names as the expected option sets. That call defaults to 30 open Projects, so
+check the returned length against the `totalCount` in the same response before
+concluding which Project to audit; auditing the wrong board reports every Issue
+on the right one as `meta.not-in-project`. Report every derived value and every
+assumption in the output.
 
 `audit.stale_days` has no default. With no configured value and none supplied
 at run time, report `issue.stale` as not evaluated and suggest setting one.
@@ -122,18 +125,21 @@ a backlog is the kind of change a human has to see first.
 ## 5. Run the audit
 
 1. **Read `references/audit-rules.md` in full before evaluating anything.**
-   This read is mandatory in `audit` and in `verify`. The catalog holds the
+   This read is mandatory in every mode. `report` runs the same evaluation as
+   `audit` and only presents it differently, so it needs the catalog for the
+   same reason. The catalog holds the
    detection query, the expected state, the suggested action, the owning skill,
    and the auto-fixable flag for every rule. Working from memory silently
    shrinks the audit, and a rule that is never evaluated is indistinguishable
    in the output from a rule that passed.
 2. Collect the data once: the Issues, the Project items and their field values,
-   and the Project fields and workflows. The catalog gives the commands.
-   Pass an explicit `--limit` on every list call and check whether the result
-   hit it. `gh issue list` and `gh project item-list` both default to a small
-   page, and a truncated collection produces an audit that is clean only
-   because it never looked. If a list comes back at exactly the limit, raise it
-   and re-run, or page, and say in the output how many objects were covered.
+   and the Project fields and workflows. The catalog gives the commands and the
+   paging guard for each of them. Every call that returns a collection is paged,
+   including `gh project list` and the GraphQL connections, and a truncated
+   collection produces an audit that is clean only because it never looked.
+   Where the response carries `totalCount`, compare it to what you received;
+   where it does not, treat a result equal to the limit as a page. Then say in
+   the output how many objects were covered.
 3. Evaluate every rule in the catalog that is applicable and not gated off.
 4. Record, for every rule, one of: findings, passed, or not evaluated with the
    reason. Never omit a rule silently.
@@ -153,14 +159,18 @@ This is the skill's core check. Every Issue in scope lands in exactly one row.
 | Closed | Todo | `state.closed-not-done` |
 | Closed | In Progress | `state.closed-not-done` |
 | Open | Done | `state.open-in-done` |
+| Open or closed | a value outside the three, such as `Blocked` | `meta.nonstandard-status` |
 | Open or closed | unset, item is in the Project | `meta.nonstandard-status` |
-| Open, in scope, absent from the Project | none | `meta.not-in-project` |
+| Open, in scope, no live item in the Project | none | `meta.not-in-project` |
 
 Issue state comes from `gh issue list`, joined to the Project item on `number`.
 `gh project item-list` does not report Issue state: `.content` carries only
 `body`, `number`, `repository`, `title`, `type`, and `url`, so a check written
-against `.content.state` compares against `null` and passes every row. The
-catalog's collection block has the correct queries.
+against `.content.state` compares against `null` and passes every row. Take
+`status` from the item-list projection, where it is a plain string. The Issue
+list's `projectItems[].status` is an object and comparing it to `Done` never
+matches. The catalog's `The joined record every rule reads` section defines every
+field, its type, and its route; read it before evaluating a `state.*` rule.
 
 A closed Issue that is not yet `Done` may simply be waiting on the `Item closed`
 automation. Re-read the item once before reporting it. A repeated

@@ -69,14 +69,24 @@ Read the children back before reporting:
 
 ```bash
 gh api graphql -f query='
-  query($owner: String!, $repo: String!, $number: Int!) {
+  query($owner: String!, $repo: String!, $number: Int!, $after: String) {
     repository(owner: $owner, name: $repo) {
       issue(number: $number) {
-        subIssues(first: 50) { nodes { number title state url } }
+        subIssues(first: 50, after: $after) {
+          totalCount
+          pageInfo { hasNextPage endCursor }
+          nodes { number title state url }
+        }
       }
     }
   }' -F owner=<owner> -F repo=<repo> -F number=<parent>
 ```
+
+`subIssues` is a paged connection like every other one in this bucket. Compare
+the returned node count to `totalCount`, and follow `endCursor` through `$after`
+while `hasNextPage` is true. A parent read back on one page reports the children
+it happened to see, so a `split` that created more of them than the page holds
+would look partially failed and invite a second run that creates duplicates.
 
 ### If the mutation is rejected
 

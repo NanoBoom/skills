@@ -34,13 +34,19 @@ gh api graphql -f query='
   query($owner: String!, $number: Int!) {
     organization(login: $owner) {
       projectV2(number: $number) {
-        workflows(first: 20) { nodes { id name number enabled } }
+        workflows(first: 20) { totalCount nodes { id name number enabled } }
       }
     }
   }' -F owner=<owner> -F number=<project>
 ```
 
 For a user owned Project, replace `organization(login:)` with `user(login:)`.
+
+`totalCount` is selected because the report below turns an absent name into
+`needs web UI`. Twenty is comfortably above GitHub's built-in set, but if
+`totalCount` exceeds what came back, page before reporting any workflow as
+absent: a truncated read would send a correctly configured Project to the web UI
+instructions.
 
 Report each of the three as one of:
 

@@ -51,10 +51,13 @@ titles and stop. Do not guess which Project is meant.
 
 When the file is absent, derive `owner` and `repo` from
 `gh repo view --json owner,name,nameWithOwner`, and find the Project with
-`gh project list --owner <owner> --format json`. If exactly one Project is
-linked to the repository, use it. If several are, ask. Report every derived
-value and every assumption you made in the output block, and suggest running
-`github-project-setup` to write the config file.
+`gh project list --owner <owner> --limit 100 --closed --format json`. That call
+returns 30 open Projects by default, so check the returned length against the
+`totalCount` beside it: "exactly one Project is linked" read off a truncated
+page is a guess, and this skill writes to whatever it picks. If exactly one
+Project is linked to the whole collection, use it. If several are, ask. Report
+every derived value and every assumption you made in the output block, and
+suggest running `github-project-setup` to write the config file.
 
 If the Project's `Status` or `Priority` field does not offer the rule 7 and rule 8
 option names, stop before writing and report the drift as

@@ -1,13 +1,16 @@
 # Report formats
 
 The rules every audit output obeys, and the copy-ready skeleton for each of the
-three modes, in one file. Each skeleton sits directly beneath the rules it obeys
-so the two cannot drift apart: a skeleton that omits a field the rules define is
-the field disappearing, because the skeleton is what gets copied.
+three modes, in one file. The skeleton is what gets copied, so a skeleton that
+omits a field the rules define is that field disappearing. No skeleton restates
+the per-finding block: all three point at the one definition above, which is the
+only thing that actually keeps them from drifting apart. Proximity is not a
+guarantee.
 
-Delete no heading from a skeleton. A heading with `None` under it says the check
-ran and found nothing. A missing heading says nothing at all, and the reader
-cannot tell a clean result from a skipped one.
+Every skeleton carries `## Rules not evaluated` and `## Assumptions`, in every
+mode, for the same reason. Delete no heading from a skeleton. A heading with
+`None` under it says the check ran and found nothing. A missing heading says
+nothing at all, and the reader cannot tell a clean result from a skipped one.
 
 ## The per-finding block
 
@@ -34,6 +37,11 @@ the reader to infer.
   reads as a completed fix (rule 10).
 - `Fix with` is the owning skill from the catalog. It is what makes the report
   actionable without a fix mode.
+- `Auto-fixable` carries the catalog's condition when the catalog states one,
+  and the suffix is not decoration. `project.contains-pull-request` is
+  auto-fixable "removing the item. Removal needs an explicit request", and a
+  bare `yes` invites a reader to remove Project items without the request rule
+  10 demands.
 
 Worked example:
 
@@ -101,13 +109,7 @@ Scope: <n> Issues, <m> Project items, <what was included>
 
 ## Findings
 
-### [<severity>] <rule-id> - <object>
-
-- Current: <what is true now, read from GitHub>
-- Expected: <what the rule requires>
-- Action: <the concrete change, in the imperative>
-- Fix with: <github-project-manage | github-project-setup>
-- Auto-fixable: <yes | no><, with the condition when it is conditional>
+<Per-finding blocks, errors first, then warnings, then info.>
 
 ## Rules not evaluated
 
@@ -121,11 +123,6 @@ Scope: <n> Issues, <m> Project items, <what was included>
 
 <Derived values when the repository config file was absent, or "None".>
 ```
-
-The conditional suffix on `Auto-fixable` is not decoration. The catalog defines
-`project.contains-pull-request` as auto-fixable "removing the item. Removal needs
-an explicit request", and a bare `yes` invites a reader to remove Project items
-without the request rule 10 demands.
 
 ## Rollups in `report` mode
 
@@ -187,14 +184,22 @@ Scope: <n> Issues, <m> Project items
 
 ## Rules not evaluated
 
-- <rule-id>: <why>
+- <rule-id>: <why, and what would enable it>
+
+## Additional observations
+
+<Real problems no catalog rule covers, marked as outside the catalog, or "None".>
+
+## Assumptions
+
+<Derived values when the repository config file was absent, or "None".>
 ```
 
 ## `verify` mode
 
 `verify` re-checks only the named Issues or rule IDs. Its job is to say whether
-a fix worked, so it reports four buckets and never silently re-audits the whole
-Project.
+a fix worked, so it sorts the re-checked scope into four buckets and never
+silently re-audits the whole Project.
 
 `Newly introduced` is the bucket that earns the mode. A fix that clears
 `meta.not-in-project` by adding an item, and leaves that item with no
@@ -231,4 +236,19 @@ the re-checked scope.>
 
 <Anything in the original findings that was outside the named scope, so this is
 not read as a clean audit.>
+
+## Rules not evaluated
+
+- <rule-id>: <why, and what would enable it>
+
+## Assumptions
+
+<Derived values when the repository config file was absent, or "None".>
 ```
+
+`Rules not evaluated` matters most in this mode, not least. A named rule that
+could not be re-evaluated and a named rule that now passes render identically
+without it, so a fix that was never confirmed reads as confirmed. `Not
+re-checked` does not cover this: that section is for rules deliberately left
+outside the scope, and this one is for a rule inside the scope that could not be
+answered.

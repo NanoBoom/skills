@@ -19,10 +19,13 @@ gh issue list --repo <owner>/<repo> --state all --limit 500 \
   --json number,title,url,body,state,stateReason,assignees,labels,createdAt,updatedAt,projectItems
 
 # Every item in the Project, with its field values. Includes pull requests and
-# draft items, which several rules need. Archived items are excluded: they are
-# not live board state, and counting them reports a false
-# project.duplicate-item on any Issue that was archived and later re-added,
-# and feeds their stale status values to the state rules.
+# draft items, which several rules need, so every rule below states which item
+# types it applies to. Archived items are excluded: they are not live board
+# state, and counting them reports a false project.duplicate-item on any Issue
+# that was archived and later re-added, and feeds their stale status values to
+# the state rules. An Issue whose only item is archived is therefore not a
+# member of this collection, and meta.not-in-project is the rule that reports
+# it, by cross-checking this projection against the Issue list.
 gh project item-list <project> --owner <owner> --format json --limit 500 \
   --jq '.items[] | select(.archive == null)
         | {id, itemType: .content.type, number: .content.number,
@@ -33,23 +36,38 @@ gh project item-list <project> --owner <owner> --format json --limit 500 \
 # the list above on `id`, and take the item type from that list: this query's
 # `type` is a GraphQL enum (`DRAFT_ISSUE`), not the `DraftIssue` spelling the
 # rules compare against.
+#
+# 100 is this connection's ceiling, not a limit you can raise: `first: 200`
+# returns EXCESSIVE_PAGINATION. Page it. Pass $after as null on the first call,
+# then feed back endCursor while hasNextPage is true, and compare the total
+# number of nodes collected to totalCount.
 gh api graphql -f query='
-  query($owner: String!, $number: Int!) {
+  query($owner: String!, $number: Int!, $after: String) {
     organization(login: $owner) {
       projectV2(number: $number) {
-        items(first: 100) { nodes { id createdAt } }
+        items(first: 100, after: $after) {
+          totalCount
+          pageInfo { hasNextPage endCursor }
+          nodes { id createdAt }
+        }
       }
     }
-  }' -F owner=<owner> -F number=<project>
+  }' -F owner=<owner> -F number=<project> -F after=<cursor-or-null>
 
 # The Project's own configuration.
 gh project field-list <project> --owner <owner> --format json \
   --jq '.fields[] | {name, type, options: (.options // [] | map(.name))}'
 
+# Twenty covers GitHub's built-in workflow set with room to spare, but the two
+# automation rules conclude "absent" from this result, so check totalCount
+# rather than assume. If it exceeds what came back, page before concluding a
+# workflow is missing.
 gh api graphql -f query='
   query($owner: String!, $number: Int!) {
     organization(login: $owner) {
-      projectV2(number: $number) { workflows(first: 20) { nodes { name enabled } } }
+      projectV2(number: $number) {
+        workflows(first: 20) { totalCount nodes { name enabled } }
+      }
     }
   }' -F owner=<owner> -F number=<project>
 ```
@@ -58,13 +76,22 @@ For a user owned Project, replace `organization(login:)` with `user(login:)`.
 If the workflows query fails on the host, the two automation rules are not
 evaluated, with that as the reason.
 
-Every collection call above is paged, including the GraphQL `items(first: 100)`.
-A result that comes back at exactly its limit is a page, not the collection.
-Raise the limit or page through before evaluating anything, and report the number
-of objects actually covered. An audit over a truncated collection is clean only
-because it never looked.
+Every collection call above is paged, and the guard differs by call rather than
+by how the limit looks:
 
-## Issue state comes from the Issue list, never from the item list
+- `gh project item-list` and `gh project field-list` return `totalCount` beside
+  the array. Compare the array length to it. That is exact.
+- `gh issue list` reports no count, so a result that is exactly its `--limit` is
+  a page. Raise it and re-run, or page.
+- The GraphQL connections carry `totalCount` and `pageInfo`. Page them with
+  `$after`. `first` cannot exceed 100 on `items`, so raising the limit is not an
+  option there.
+
+Do all of this before evaluating anything, and report the number of objects
+actually covered. An audit over a truncated collection is clean only because it
+never looked.
+
+## The joined record every rule reads
 
 `gh project item-list` emits only `body`, `number`, `repository`, `title`,
 `type`, and `url` under `.content`. There is no `.content.state` and no
@@ -72,11 +99,46 @@ because it never looked.
 comparison against it silently passes. Never project a `.content` key that is
 not one of those six.
 
-Join the two collections on `number` instead. The Issue list carries `state` and
-`stateReason`, and each entry's `projectItems[]` carries the `status` value for
-every Project the Issue belongs to, identified by the Project `title`. Match on
-that title, which is the `title` key under `project` in the config file. Both
-state rules read Issue state from this join.
+Join the two collections on `number` instead, and build exactly this record.
+Every rule below reads these field names and no others:
+
+| Field | Type | Taken from |
+|---|---|---|
+| `number` | integer, absent on drafts | either side, the join key |
+| `itemType` | `Issue`, `PullRequest`, `DraftIssue` | the item-list projection |
+| `state` | `OPEN` or `CLOSED` | the Issue list |
+| `stateReason` | string, may be empty | the Issue list |
+| `status` | **plain string**, or null when unset | the item-list projection |
+| `priority` | plain string, or null when unset | the item-list projection |
+
+**`status` is the item-list projection's string, not the Issue list's object.**
+Both routes exist and they are not interchangeable. The projection emits
+`"status": "In Progress"`. The Issue list's `projectItems[]` emits
+`"status": {"name": "In Progress", "optionId": "..."}` for every Project the
+Issue belongs to, identified by the Project `title`. Taking the second and
+comparing it to `"Done"` never matches, which turns `state.closed-not-done` on
+for every closed Issue, turns `state.open-in-done` off entirely, and reports
+every item as `meta.nonstandard-status`. If you do read it from the Issue list,
+match the entry whose `title` is the `title` key under `project` in the config
+file, and take `.status.name`. Write the `.name` down; do not leave it to be
+inferred.
+
+**An archived item is not membership.** The item-list projection drops archived
+items and the Issue list's `projectItems[]` keeps them, so the two routes cover
+different populations and an Issue can appear in the second and not the first.
+That Issue is invisible on every board view, which is exactly the condition
+`meta.not-in-project` is defined to catch, so the answer is that an archived
+item does not count: such an Issue is reported, with "the only item is archived"
+as its current value. The `meta.not-in-project` entry says how to detect that
+with both routes, and no Issue falls between them.
+
+**Every rule that reads this record states the item types it applies to.** The
+collection deliberately holds drafts and pull requests, so "every item" is never
+the intended scope by default. A draft has no `number` at all, verified against
+the schema: `DraftIssue` exposes `assignees`, `body`, `bodyHTML`, `bodyText`,
+`createdAt`, `creator`, `id`, `projectV2Items`, `projectsV2`, `title`, and
+`updatedAt`. A rule whose action cannot be applied to a draft or a pull request
+must not fire on one.
 
 ## Body section detection
 
@@ -92,7 +154,14 @@ multi-line ones, then test what is left. Without this step an empty Issue passes
 all four rules that look for a missing section, which is the opposite of what
 those rules are for.
 
-A heading followed by nothing, by whitespace only, or by `TBD` counts as absent.
+**A section holding only writer-supplied placeholder text is absent, whatever
+syntax the placeholder uses.** The HTML comment is one syntax and not the only
+one. A heading followed by nothing, by whitespace only, or by `TBD` counts as
+absent. So does a list marker with no text after it: `- [ ]`, `- [x]`, `-`, and
+`*` are template scaffolding until someone writes a line, and the template this
+bucket ships supplies two empty checkboxes under `## Acceptance criteria`. Test
+what a section says, not that it has bytes.
+
 `None` also counts as absent, except under `## Non-goals` and
 `## Additional context`: both templates this bucket ships instruct the author to
 write `None` rather than delete a section, so there `None` is a real answer and
@@ -131,7 +200,10 @@ the section counts as present.
 - **Severity**: warning
 - **Detects**: no acceptance criteria at all.
 - **Find it**: body has no `## Acceptance criteria` equivalent, or the section
-  contains no `- [ ]` or `- [x]` line.
+  contains no `- [ ]` or `- [x]` line **carrying text after the marker**. An
+  empty checkbox is the template's placeholder, not a criterion, so an Issue
+  submitted with the shipped template untouched fires this rule rather than
+  passing it.
 - **Expected**: a checkbox list of observable conditions.
 - **Action**: add criteria a third party can verify without asking the author.
 - **Owner**: `github-project-manage`
@@ -261,7 +333,9 @@ the section counts as present.
 
 - **Severity**: warning
 - **Detects**: a Project item with no `Priority` value.
-- **Find it**: `priority` is null or empty on the item.
+- **Find it**: `itemType` is `Issue` and `priority` is null or empty on the
+  item. Drafts and pull request items are out of scope: the action is to
+  prioritize a requirement, and neither is one.
 - **Gate**: `audit.require_priority: true`.
 - **Expected**: every item carries `P0`, `P1`, or `P2`.
 - **Action**: set the priority.
@@ -284,23 +358,36 @@ the section counts as present.
 ### `meta.not-in-project`
 
 - **Severity**: error
-- **Detects**: an open in-scope Issue that is not an item in the Project, so it
-  is invisible to every count and every view.
-- **Find it**: the Issue's own `projectItems` carries no entry whose `title` is
-  the configured Project title. Decide this from the Issue list, not from the
-  item list: `projectItems` travels with the Issue and is not paged, so it cannot
-  report a member as absent because a page filled up.
-- **Expected**: every in-scope Issue is an item in the Project.
-- **Action**: add it, then set `Priority` and `Status`.
+- **Detects**: an open in-scope Issue with no live item in the Project, so it is
+  invisible to every count and every view.
+- **Find it**: two conditions, one per route, because neither route answers it
+  alone.
+  1. The Issue's own `projectItems` carries no entry whose `title` is the
+     configured Project title. Decide this from the Issue list, not from a scan
+     of the item list: `projectItems` travels with the Issue, so it cannot
+     report a member as absent because someone else's page filled up.
+  2. Or it carries such an entry, and that Issue `number` is absent from the
+     item-list projection whose completeness you proved against `totalCount`.
+     The projection excludes archived items, so this is the archived-only case:
+     the item exists and is on no board view. Report `only item is archived` as
+     the current value, and say to unarchive rather than to add, since adding a
+     second item is `project.duplicate-item`.
+- **Expected**: every in-scope Issue is a live, non-archived item in the Project.
+- **Action**: add it, then set `Priority` and `Status`. For the archived case,
+  unarchive the existing item instead.
 - **Owner**: `github-project-manage`
 - **Auto-fixable**: yes.
 
 ### `meta.nonstandard-priority`
 
 - **Severity**: error
-- **Detects**: an item whose `Priority` value is outside `P0`, `P1`, `P2`.
-- **Find it**: `priority` is not one of `P0`, `P1`, `P2`. Rule 8 is the only
-  owner of this set; there is no configurable alternative.
+- **Detects**: an item carrying a `Priority` value outside `P0`, `P1`, `P2`.
+- **Find it**: `priority` is non-null and is not one of `P0`, `P1`, `P2`. Rule 8
+  is the only owner of this set; there is no configurable alternative. **A
+  missing value is excluded here and belongs to `meta.missing-priority`**, which
+  is a gated warning. Treating null as non-standard would fire this ungated
+  `error` on every unprioritized item and defeat `require_priority: false`,
+  which the config file promises turns the question off.
 - **Expected**: rule 8 holds exactly.
 - **Action**: set a valid value on the item. If the Project's field itself
   offers the extra option, that is `project.field-option-drift` and belongs to
@@ -317,9 +404,12 @@ the section counts as present.
   missing status, on purpose: an absent value is a non-standard value, because an
   item with no `Status` is invisible on a board grouped by `Status` exactly as a
   `Blocked` item corrupts one.
-- **Find it**: `status` is not one of `Todo`, `In Progress`, `Done`, which
-  includes null, empty, and absent. Rule 7 is the only owner of this set; there
-  is no configurable alternative.
+- **Find it**: `status` is not one of `Todo`, `In Progress`, `Done`. A wrong
+  value fires on any item type, because a `Blocked` column corrupts the board
+  whatever sits in it. The unset half is limited to `itemType == "Issue"`: its
+  action sets `Todo` or `Done` from the Issue's own state, which a draft does
+  not have. Rule 7 is the only owner of this set; there is no configurable
+  alternative.
 - **Expected**: rule 7 holds exactly, and every item carries one of the three.
 - **Action**: for a wrong value, move the item to a valid status; a `Blocked`
   value becomes `Todo` plus a `blocked-by` relation. For an unset value, set
@@ -353,8 +443,9 @@ the section counts as present.
 - **Severity**: error
 - **Detects**: a closed Issue whose Project item is `Todo` or `In Progress`, so
   the board over-counts open work.
-- **Find it**: in the Issue-list-to-item join, `state` is `CLOSED` and `status`
-  is not `Done`.
+- **Find it**: in the joined record, `state` is `CLOSED` and `status` is `Todo`
+  or `In Progress`. An unset `status` is `meta.nonstandard-status`, not this
+  rule, which is what keeps every Issue on exactly one row of the status matrix.
 - **Expected**: closed Issues are `Done`.
 - **Action**: re-read once first, since the `Item closed` automation is not
   instant. If it persists across several Issues, the workflow is off and the
@@ -367,8 +458,7 @@ the section counts as present.
 - **Severity**: error
 - **Detects**: an open Issue whose Project item is `Done`, so the board
   under-counts open work.
-- **Find it**: in the Issue-list-to-item join, `state` is `OPEN` and `status` is
-  `Done`.
+- **Find it**: in the joined record, `state` is `OPEN` and `status` is `Done`.
 - **Expected**: only closed Issues are `Done`.
 - **Action**: decide which is true. Either close the Issue, or move the item
   back to `Todo` or `In Progress`.
@@ -414,7 +504,13 @@ the section counts as present.
 
 - **Severity**: error
 - **Detects**: the same Issue present as two items, so it is counted twice.
-- **Find it**: group the items by `number` and report any group above one.
+- **Find it**: **among the items that have a `number`**, group by `number` and
+  report any group above one. Drafts have no `number` at all, so grouping the
+  whole collection puts every draft on the board into one `null` group and
+  reports it as a duplicate. The action here removes Project items, so a false
+  finding here deletes real board content, and drafts accumulating is normal
+  board state rather than an edge case: it is what `project.long-lived-draft`
+  exists for.
 - **Expected**: one item per Issue.
 - **Action**: remove the extra items, keeping the one with field values set.
 - **Owner**: `github-project-setup`

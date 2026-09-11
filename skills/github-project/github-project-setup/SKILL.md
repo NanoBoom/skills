@@ -68,14 +68,23 @@ write only where the step reports a gap the user agreed to fix.
 1. **Host, user, repository, owner.**
    `gh auth status`, then `gh repo view --json owner,name,nameWithOwner,defaultBranchRef`.
    Record whether the owner is a user or an organization; some features differ.
-2. **Projects scope.** Run `gh project list --owner <owner> --format json`. If
+2. **Projects scope.** Run
+   `gh project list --owner <owner> --limit 100 --closed --format json`. If
    it fails on scope, report the exact command to fix it,
    `gh auth refresh -s project,read:project`, and stop. Do not continue with a
    partial picture.
 3. **Find an existing Project before creating one.** Match by the `--project`
    number if given, then by the configured or supplied title, then by Projects
-   already linked to the repository. Only when none matches is creation even a
-   candidate, and only in `initialize`. When both a number and a title are
+   already linked to the repository. **The list is paged, and here a miss
+   creates.** `gh project list` returns at most 30 Projects by default and omits
+   closed ones entirely, so pass `--limit` and `--closed`, then compare the
+   returned length to the `totalCount` the same response carries. If they
+   disagree, page or raise the limit before concluding that no Project matches.
+   An owner past the page size otherwise gets a second Project with the same
+   title, which is `project.duplicate-item` at board granularity and cannot be
+   undone by this skill, because it never deletes a Project. Only when none
+   matches across the whole collection is creation even a candidate, and only in
+   `initialize`. When both a number and a title are
    available, resolve the number and **compare the returned title to the
    configured one**, with
    `gh project view <number> --owner <owner> --format json --jq '{number, title, url}'`.
@@ -147,7 +156,9 @@ and change nothing:
 - the Project exists and is linked to the repository;
 - the field exists, is single select, and already has exactly the right options;
 - the view exists with the right name;
-- the workflow exists and is enabled with the right target value;
+- the workflow exists and is enabled. The target value is not part of this
+  test, because step 7 established that the API cannot read it. Idempotence here
+  means the workflow is on, never that it is known to be configured correctly;
 - the Issue template file already exists on the default branch;
 - the config file already holds the current values. "Already satisfied" here
   means its values were checked against GitHub this run, not that the file was
@@ -179,7 +190,7 @@ Mode: <inspect|initialize|repair>
 - Backlog view: <ok | missing | needs web UI>
 - Automation, item added -> Todo: <enabled, target value not verifiable through the API | disabled | needs web UI>
 - Automation, item closed -> Done: <enabled, target value not verifiable through the API | disabled | needs web UI>
-- Auto-add to project: <enabled, filter not verifiable through the API | disabled | not configured | needs web UI>
+- Auto-add to project: <enabled, filter not verifiable through the API | disabled | needs web UI>
 - Issue template: <ok at <path> | written | missing>
 - Issue Types: <configured: <names> | not configured for this owner>
 - Config file .github/github-project.yml: <ok | written | missing>
