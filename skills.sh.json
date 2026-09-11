@@ -34,6 +34,11 @@
       "title": "Authoring",
       "description": "Write the skills and the documentation themselves, and get a plain-language restatement when a reply does not land.",
       "skills": ["prp-meta-skill", "prp-technical-writing", "prp-bro"]
+    },
+    {
+      "title": "GitHub Issue requirement management",
+      "description": "Run software requirements as GitHub Issues with a Project as the ordering, ownership, priority, and status view. These talk to GitHub through the gh CLI and nothing else, so a single copied SKILL.md still works.",
+      "skills": ["github-project-setup", "github-project-manage", "github-project-audit"]
     }
   ]
 }

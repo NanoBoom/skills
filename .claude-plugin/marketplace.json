@@ -40,6 +40,36 @@
         "hooks",
         "github"
       ]
+    },
+    {
+      "name": "github-project",
+      "description": "GitHub Issue requirement management with the gh CLI - set up the Project, its fields, views and automations, run the Issue lifecycle end to end, and audit Issue quality and Issue-to-Project consistency against a stable rule catalog",
+      "source": "./skills/github-project",
+      "version": "0.1.0",
+      "category": "development",
+      "license": "MIT",
+      "strict": true,
+      "homepage": "https://github.com/NanoBoom/skills/tree/main/skills/github-project",
+      "author": {
+        "name": "NanoBoom",
+        "email": "cinuor@gmail.com"
+      },
+      "keywords": [
+        "github",
+        "issues",
+        "projects",
+        "requirements",
+        "backlog"
+      ],
+      "tags": [
+        "github",
+        "issues",
+        "projects",
+        "requirements",
+        "backlog",
+        "audit",
+        "gh-cli"
+      ]
     }
   ]
 }

@@ -3,6 +3,12 @@
 Complete PRP (Product Requirement Prompt) workflow automation for Claude Code,
 packaged as **Agent Skills**.
 
+This repository is also the `nanoboom` marketplace, and it ships two plugins.
+**`prp-core`** is the PRP workflow and everything below is about it.
+**`github-project`** is a smaller, independent plugin for running requirements
+as GitHub Issues; it has its own [README](./skills/github-project/README.md) and
+installs separately. Neither depends on the other.
+
 > **Forked from upstream.** This repository is a fork of the `prp-core` plugin
 > from [Wirasm/PRPs-agentic-eng](https://github.com/Wirasm/PRPs-agentic-eng),
 > taken at commit `2cced43` (2026-09-01), and maintained here with its own
@@ -76,6 +82,21 @@ maintainer triage and worklist skills are user-invocable only.
 | `/prp-core:prp-meta-skill` | Author new skills and refactor fat skills into a lean `SKILL.md` + `references/` (prescribes the craft, not your project's content) |
 | `/prp-core:prp-technical-writing` | Write and edit developer documentation that is clear, concrete, and verified |
 | `/prp-core:prp-bro` | Restate the previous response in plain language, with no jargon |
+
+### GitHub Issue requirement management
+
+The `github-project` plugin, installed separately with
+`/plugin install github-project@nanoboom`. These three talk to GitHub through
+the `gh` CLI and nothing else: no subagent, no plugin root path, no file outside
+each skill's own directory. A single `SKILL.md` taken through `npx skills` still
+works, which is not true of the `prp-core` skills above. Full documentation is
+in the [bucket README](./skills/github-project/README.md).
+
+| Skill | Description |
+|-------|-------------|
+| `/github-project:github-project-setup` | Inspect, initialize, or repair the Project, its `Status` and `Priority` fields, the Board and Backlog views, the built-in automations, the Issue template, and `.github/github-project.yml` |
+| `/github-project:github-project-manage` | Run the Issue lifecycle across eleven modes, from drafting a requirement to closing it, keeping each Issue's Project item in step |
+| `/github-project:github-project-audit` | Read-only audit of Issue quality and Issue-to-Project consistency against a 27-rule catalog with stable rule IDs |
 
 ## Agents
 
@@ -179,6 +200,7 @@ repeat /prp-core:prp-plan for the next phase
 ```
 /plugin marketplace add NanoBoom/skills
 /plugin install prp-core@nanoboom
+/plugin install github-project@nanoboom   # optional, independent
 ```
 
 ### Local development and testing
@@ -204,7 +226,8 @@ Add to your project's `.claude/settings.json`:
     }
   },
   "enabledPlugins": {
-    "prp-core@nanoboom": true
+    "prp-core@nanoboom": true,
+    "github-project@nanoboom": true
   }
 }
 ```
@@ -216,9 +239,11 @@ npx skills@latest add NanoBoom/skills
 ```
 
 This copies the `SKILL.md` files into your project for any Agent Skills
-compatible harness. It does **not** bring the `prp-core:<agent>` subagents or the
-Stop hook, so the skills that dispatch them will not work this way. Use it to
-take an individual self-contained skill, not the workflow as a whole.
+compatible harness. It finds all 26 skills across both plugins. It does **not**
+bring the `prp-core:<agent>` subagents or the Stop hook, so the `prp-core` skills
+that dispatch them will not work this way; use it to take an individual
+self-contained skill, not the workflow as a whole. The three `github-project`
+skills are self-contained by design and lose nothing here.
 
 ## Requirements
 

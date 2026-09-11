@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # NOTE: This is a maintainer tool, not an installer. Users install with
-# `npx skills add NanoBoom/skills` or by installing the prp-core plugin. On
-# Claude Code this script duplicates the skills that an installed prp-core
-# plugin already provides, so run it only when you work on this repository
-# without the plugin installed.
+# `npx skills add NanoBoom/skills` or by installing the prp-core or
+# github-project plugin. On Claude Code this script duplicates the skills an
+# installed plugin already provides, so run it only when you work on this
+# repository without those plugins installed.
 #
 # Be aware that a linked skill is NOT the same as the installed plugin: the
 # prp-core:<agent> subagents in agents/ and the Stop hook in hooks/ only exist
