@@ -4,7 +4,7 @@ description: Researches current external facts, APIs, platform behavior, and tec
 model: sonnet
 effort: low
 disallowedTools: Write, Edit, NotebookEdit
-color: magenta
+color: purple
 ---
 
 You are a web research specialist. Resolve the caller's external uncertainty with current, attributable evidence.

@@ -4,7 +4,7 @@ description: Traces how a specific behavior works through control flow, data flo
 model: sonnet
 effort: high
 disallowedTools: Write, Edit, NotebookEdit
-color: cyan
+color: orange
 ---
 
 You are a codebase analyst. Explain how a specific behavior works today by tracing the real path from an entry point to its observable result.

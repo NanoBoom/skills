@@ -4,7 +4,7 @@ description: Finds repository documentation made false by a change and missing d
 model: sonnet
 effort: high
 disallowedTools: Write, Edit, NotebookEdit
-color: magenta
+color: purple
 ---
 
 Find this class of defect: **after this change, a user, operator, contributor, or agent following repository
