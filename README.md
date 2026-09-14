@@ -3,6 +3,8 @@
 Complete PRP (Product Requirement Prompt) workflow automation for Claude Code,
 packaged as **Agent Skills**.
 
+[中文文档](./README.zh-CN.md)
+
 This repository is also the `nanoboom` marketplace, and it ships two plugins.
 **`prp-core`** is the PRP workflow and everything below is about it.
 **`github-project`** is a smaller, independent plugin for running requirements
@@ -195,7 +197,23 @@ repeat /prp-core:prp-plan for the next phase
 
 ## Installation
 
-### From GitHub (recommended)
+There are two ways in, and they do not deliver the same thing.
+
+| | Claude Code plugin | `npx skills add` |
+|---|---|---|
+| What lands | skills, the 11 agents, the Stop hook | `SKILL.md` files and their supporting directories |
+| Invocation | `/prp-core:<name>`, `/github-project:<name>`, plus automatic loading | whatever your harness does with an Agent Skill |
+| Unit of install | one plugin at a time, `prp-core` and `github-project` separately | one flat set of 26 skills, or the ones you name |
+| Updates | `/plugin update` against the marketplace | `npx skills update` |
+| Best for | the PRP workflow as a whole | one self-contained skill, or a harness that is not Claude Code |
+
+If you use Claude Code, install the plugin. Reach for `npx skills` when you want
+a single skill somewhere else.
+
+### Claude Code plugin (recommended)
+
+Register the marketplace once, then install either plugin from it. The two are
+independent and neither requires the other.
 
 ```
 /plugin marketplace add NanoBoom/skills
@@ -203,17 +221,45 @@ repeat /prp-core:prp-plan for the next phase
 /plugin install github-project@nanoboom   # optional, independent
 ```
 
-### Local development and testing
+Restart Claude Code so the skills, agents, and hook load.
 
+The same thing works outside the REPL, which is what you want in a script or a
+Dockerfile:
+
+```bash
+claude plugin marketplace add NanoBoom/skills
+claude plugin install prp-core@nanoboom --scope user
+claude plugin install github-project@nanoboom --scope user
 ```
-/plugin marketplace add /absolute/path/to/skills
-/plugin install prp-core@nanoboom
-# Restart Claude Code
+
+`--scope` takes `user` (default, all your projects), `project` (checked into the
+repository's `.claude/settings.json`, so it is shared with everyone who clones
+it), or `local` (this repository, your machine only).
+
+#### Verify
+
+```bash
+claude plugin list
+claude plugin details prp-core@nanoboom
 ```
 
-### Team automatic installation
+`details` prints the component inventory: 23 skills, 11 agents, 1 hook for
+`prp-core`, and 3 skills for `github-project`. In-session, `/plugin` shows both
+under the `nanoboom` marketplace, and typing `/prp-core:` completes against the
+installed skills.
 
-Add to your project's `.claude/settings.json`:
+#### Update and uninstall
+
+```bash
+claude plugin marketplace update nanoboom
+claude plugin update prp-core@nanoboom      # restart to apply
+claude plugin uninstall prp-core@nanoboom
+```
+
+#### Install for the whole team
+
+Commit this to your project's `.claude/settings.json`. Everyone who opens the
+repository is offered both plugins, with no manual marketplace step:
 
 ```json
 {
@@ -232,18 +278,71 @@ Add to your project's `.claude/settings.json`:
 }
 ```
 
-### Other agents
+#### Run from a working tree
 
-```bash
-npx skills@latest add NanoBoom/skills
+To try a local checkout, point the marketplace at the directory instead of at
+GitHub. This rewrites the `nanoboom` entry in your settings, so restore it when
+you are done:
+
+```
+/plugin marketplace add /absolute/path/to/skills
+/plugin install prp-core@nanoboom
+# Restart Claude Code
 ```
 
-This copies the `SKILL.md` files into your project for any Agent Skills
-compatible harness. It finds all 26 skills across both plugins. It does **not**
-bring the `prp-core:<agent>` subagents or the Stop hook, so the `prp-core` skills
-that dispatch them will not work this way; use it to take an individual
-self-contained skill, not the workflow as a whole. The three `github-project`
-skills are self-contained by design and lose nothing here.
+To load a tree for one session without installing anything, use
+`claude --plugin-dir /absolute/path/to/skills`. For the `github-project` plugin
+the directory is the bucket, `--plugin-dir /absolute/path/to/skills/skills/github-project`.
+
+### `npx skills add` (any Agent Skills harness)
+
+This copies skills into a harness that understands Agent Skills. No marketplace,
+no Claude Code required.
+
+```bash
+npx skills@latest add NanoBoom/skills            # pick interactively
+npx skills@latest add NanoBoom/skills --list     # see what is there first
+npx skills@latest add NanoBoom/skills --all      # every skill, every agent, no prompts
+```
+
+Take a single skill, which is the case this path is actually good at:
+
+```bash
+npx skills@latest add NanoBoom/skills --skill github-project-manage
+npx skills@latest add NanoBoom/skills --skill prp-technical-writing --global
+```
+
+Useful flags: `--global` installs at user level instead of into the current
+project, `--agent '*'` targets every detected harness, `--copy` writes real files
+instead of symlinks, and `-y` skips the prompts. Later, `npx skills list`,
+`npx skills update`, and `npx skills remove` manage what you took.
+
+#### What you get and what you do not
+
+`npx skills` discovers skills by scanning `skills/`, so it finds all 26 across
+both buckets and ignores the plugin manifests. It copies `SKILL.md` files and
+their supporting directories, and nothing else in this repository. It does
+**not** bring the `prp-core:<agent>` subagents in [`agents/`](./agents) or the
+Stop hook in [`hooks/`](./hooks).
+
+So:
+
+- The three `github-project` skills are self-contained by design. They talk to
+  GitHub through the `gh` CLI and read nothing outside their own directory, so
+  they lose nothing here.
+- Most `prp-core` skills dispatch subagents or read `${CLAUDE_PLUGIN_ROOT}`.
+  Taken this way they degrade: the skill still loads, but the work it delegates
+  has nowhere to go. Use this path for an individual skill, not for the workflow
+  as a whole.
+
+Skills arrive under a `General` heading rather than their bucket name. The
+heading comes from the root `.claude-plugin/plugin.json` and is cosmetic.
+
+#### Symlink a working tree
+
+For maintainers, [`scripts/link-skills.sh`](./scripts/link-skills.sh) symlinks
+every skill outside `deprecated/` into `~/.claude/skills` and `~/.agents/skills`,
+so edits in the tree take effect immediately.
 
 ## Requirements
 
