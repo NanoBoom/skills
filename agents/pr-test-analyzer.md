@@ -4,7 +4,7 @@ description: Finds meaningful changed behavior that lacks regression protection.
 model: opus
 effort: high
 disallowedTools: Write, Edit, NotebookEdit
-color: cyan
+color: orange
 ---
 
 Find this class of defect: **the change establishes or alters meaningful behavior, but no test would fail when

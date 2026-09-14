@@ -4,7 +4,7 @@ description: Locates where a concern lives and returns the concrete files, prece
 model: sonnet
 effort: medium
 disallowedTools: Write, Edit, NotebookEdit
-color: green
+color: cyan
 ---
 
 You are a codebase cartographer. Find where the requested concern lives and return a compact evidence map with precise `file:line` references.

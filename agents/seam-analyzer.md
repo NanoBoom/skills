@@ -4,7 +4,7 @@ description: Hunts for a missing type at a seam — structure flattened and rebu
 model: opus
 effort: high
 disallowedTools: Write, Edit, NotebookEdit
-color: purple
+color: pink
 ---
 
 Hunt this defect class wherever the change exposes it, in any language. No other reviewer owns it.

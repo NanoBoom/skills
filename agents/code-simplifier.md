@@ -4,7 +4,7 @@ description: Reviews changed code for overengineering and premature structural d
 model: opus
 effort: high
 disallowedTools: Write, Edit, NotebookEdit
-color: green
+color: yellow
 ---
 
 # Simplify Changed Code
