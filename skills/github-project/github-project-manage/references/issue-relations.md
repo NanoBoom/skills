@@ -147,15 +147,25 @@ Issue before concluding. Then record the dependency in the Issue body:
 ```
 
 and say in the output that it is recorded as text, not as a GitHub relation.
-Rule 9 still holds either way: the block goes in the Issue, and no `Blocked`
-status is ever created.
+Rule 9 still holds either way: the block goes in the Issue, and a block by
+another Issue never becomes a `Blocked` status, even when the relation can only
+be recorded as text.
 
 ## The status of a blocked Issue
 
-A blocked Issue stays in `Todo`. It does not move to `In Progress`, and there is
-no `Blocked` column. The `blocked-by` relation and the note in the body are the
-whole record. This is deliberate: a `Blocked` status splits the meaning of the
-board and makes `Todo` counts wrong.
+There are two kinds of block, and they go to two different places.
+
+An Issue blocked by another Issue stays in `Todo`. It does not move to
+`In Progress`, and it does not move to `Blocked`. The `blocked-by` relation and
+the note in the body are the whole record, and both can be checked against the
+blocker's state. A `Blocked` status on top of a relation would be a second copy
+of the same fact.
+
+An Issue waiting on something that has no Issue here, such as a vendor, a
+customer, or a team in another organization, is `Blocked`. There is no relation
+to create, so the body line saying what it waits on is the record, and `move`
+sets the status together with that line. Section 7 of `SKILL.md` has the rules
+and `references/gh-recipes.md` has the transaction.
 
 When a blocker closes, the blocked Issue does not move on its own. Moving it is
 a decision, so ask, or leave it in `Todo` and report that the blocker is now

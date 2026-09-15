@@ -10,8 +10,10 @@ but is what keeps rule 3 true without anyone policing it.
 | `Auto-add to project` | Adds matching new Issues to the Project | Optional |
 
 With the first two enabled, nobody sets `Todo` or `Done` by hand, and the board
-stays true without maintenance. `In Progress` is the only value a person sets,
-and that is correct: it is the only one that carries a human decision.
+stays true without maintenance. `In Progress` and `Blocked` are the two values
+a person sets, and that is correct: they are the two that carry a human
+decision, starting the work and declaring that it waits on something outside
+this repository's Issues.
 
 ## What the API can and cannot do
 

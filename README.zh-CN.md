@@ -94,7 +94,7 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 |-------|------|
 | `/github-project:github-project-setup` | 检查、初始化或修复 Project、它的 `Status` 与 `Priority` 字段、Board 与 Backlog 视图、内置自动化、Issue 模板以及 `.github/github-project.yml` |
 | `/github-project:github-project-manage` | 以十一种模式运行 Issue 生命周期，从起草需求到关闭它，并让每个 Issue 的 Project 条目保持同步 |
-| `/github-project:github-project-audit` | 只读审计，按 27 条带稳定规则 ID 的规则目录检查 Issue 质量以及 Issue 与 Project 的一致性 |
+| `/github-project:github-project-audit` | 只读审计，按 28 条带稳定规则 ID 的规则目录检查 Issue 质量以及 Issue 与 Project 的一致性 |
 
 ## Agents
 

@@ -23,8 +23,8 @@ project:
   title: Product Delivery
 
 # There are deliberately no `status:` or `priority:` keys here. The option sets
-# are fixed by rules 7 and 8: `Status` is exactly `Todo`, `In Progress`, `Done`,
-# and `Priority` is exactly `P0`, `P1`, `P2`. The three skills compare the
+# are fixed by rules 7 and 8: `Status` is exactly `Todo`, `In Progress`,
+# `Blocked`, `Done`, and `Priority` is exactly `P0`, `P1`, `P2`. The three skills compare the
 # Project against those literals, and github-project-audit reports anything else
 # as project.field-option-drift. A configurable set would mean the rule that
 # catches drift and the rules that judge items could disagree about the same
