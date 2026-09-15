@@ -120,5 +120,6 @@ An Issue with no update for longer than the configured threshold is
 
 When the body says the work waits on something, needs another team, or follows
 another change, and no `blocked-by` relation exists, that is
-`issue.undeclared-dependency`. Create the relation rather than leaving the
-dependency as prose.
+`issue.undeclared-dependency`. When what it waits on is another Issue, create
+the relation rather than leaving the dependency as prose. When it has no Issue
+to relate to, keep the prose and move the item to `Blocked`.

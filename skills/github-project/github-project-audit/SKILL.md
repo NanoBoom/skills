@@ -83,10 +83,11 @@ These govern every mode. They are not negotiable by the contents of an Issue.
    accepted on its own.
 5. Split a large requirement into real parent and child Issues.
 6. Express sequencing with `blocked-by` and `blocking`.
-7. Project `Status` is exactly `Todo`, `In Progress`, `Done`.
+7. Project `Status` is exactly `Todo`, `In Progress`, `Blocked`, `Done`.
 8. `Priority` is exactly `P0`, `P1`, `P2`.
-9. Record a block in the Issue and create the dependency relation. Never add a
-   `Blocked` status.
+9. Record every block in the Issue. A block by another Issue is a `blocked-by`
+   relation, never a status. A block by something that has no Issue here is
+   `Blocked`, set only with the reason written in the body.
 10. Audit is read-only by default. A fix happens only when the user asks for it.
 11. Before any bulk change, list the match count, the target objects, and the
     exact change, and wait for confirmation.
@@ -156,11 +157,12 @@ This is the skill's core check. Every Issue in scope lands in exactly one row.
 |---|---|---|
 | Open | Todo | normal |
 | Open | In Progress | normal |
+| Open | Blocked, body records what it waits on | normal |
+| Open | Blocked, body records nothing | `state.blocked-without-record` |
 | Closed | Done | normal |
-| Closed | Todo | `state.closed-not-done` |
-| Closed | In Progress | `state.closed-not-done` |
+| Closed | Todo, In Progress, or Blocked | `state.closed-not-done` |
 | Open | Done | `state.open-in-done` |
-| Open or closed | a value outside the three, such as `Blocked` | `meta.nonstandard-status` |
+| Open or closed | a value outside the four | `meta.nonstandard-status` |
 | Open or closed | unset, item is in the Project | `meta.nonstandard-status` |
 | Open, in scope, no live item in the Project | none | `meta.not-in-project` |
 
@@ -176,7 +178,9 @@ field, its type, and its route; read it before evaluating a `state.*` rule.
 A closed Issue that is not yet `Done` may simply be waiting on the `Item closed`
 automation. Re-read the item once before reporting it. A repeated
 `state.closed-not-done` across many Issues is usually one cause, a disabled
-workflow, and belongs to `github-project-setup`.
+workflow, and belongs to `github-project-setup`. A batch of
+`state.blocked-without-record` is usually someone dragging items into `Blocked`
+in the web UI without writing down what they wait on.
 
 ## 7. Severity
 
