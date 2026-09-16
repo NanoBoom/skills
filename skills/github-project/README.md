@@ -58,11 +58,13 @@ these skills target Projects v2 only.
 ## Upgrading from 0.2.0
 
 Version 0.3.0 adds a `language` key to `.github/github-project.yml`, a BCP 47
-tag such as `zh-CN`. Every piece of free text the skills write to GitHub from
-then on is in that language: Issue titles and bodies, the Issue template,
-closing notes, and the reason after `Waiting on:`. The names the skills match
-literally stay as they are in every language: the `Status` and `Priority`
-options, the `Board` and `Backlog` views, and the `Waiting on:` prefix itself.
+tag such as `zh-CN`. Every Issue created from then on is written in that
+language, title and body, and so is the Issue template. Text added later to an
+Issue that already exists, such as a closing note or the reason after
+`Waiting on:`, follows the language that Issue already uses. The names the
+skills match literally stay as they are in every language: the `Status` and
+`Priority` options, the `Board` and `Backlog` views, and the `Waiting on:`
+prefix itself.
 
 A configuration written by 0.2.0 has no such key, and every skill then behaves
 as 0.2.0 did, writing in the language of the conversation and saying so under

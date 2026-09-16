@@ -148,7 +148,7 @@ Issue before concluding. Then record the dependency in the Issue body:
 
 and say in the output that it is recorded as text, not as a GitHub relation.
 `## Dependencies` and `Blocked by: #n` are markers and stay as written in every
-language; only the rest of the body follows the configured `language`.
+language; the rest of the note is in the Issue's language.
 Rule 9 still holds either way: the block goes in the Issue, and a block by
 another Issue never becomes a `Blocked` status, even when the relation can only
 be recorded as text.

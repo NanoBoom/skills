@@ -70,6 +70,14 @@ write only where the step reports a gap the user agreed to fix.
 1. **Host, user, repository, owner.**
    `gh auth status`, then `gh repo view --json owner,name,nameWithOwner,defaultBranchRef`.
    Record whether the owner is a user or an organization; some features differ.
+   Resolve `language` here too, before any step that writes text: from
+   `--language`, else from the existing `.github/github-project.yml`, else, in
+   `initialize` only, ask the user for a BCP 47 tag such as `en`, `zh-CN`, or
+   `ja`. Never guess one and never default to one in any mode; `inspect` and
+   `repair` report it as not set when nothing supplies it. When `--language`
+   differs from the value already in the config, say before writing anything
+   that existing Issues and the existing template stay as they are and only
+   Issues created afterwards take the new language.
 2. **Projects scope.** Run
    `gh project list --owner <owner> --limit 100 --closed --format json`. If
    it fails on scope, report the exact command to fix it,
@@ -112,46 +120,29 @@ write only where the step reports a gap the user agreed to fix.
    `references/automation-setup.md`.
 8. **Issue template.** Check `.github/ISSUE_TEMPLATE/` on the default branch.
    When none applies, read `assets/issue-template.md` and write it to
-   `.github/ISSUE_TEMPLATE/requirement.md`, in the configured `language`. Its
-   five sections and their order must match the fallback body that
+   `.github/ISSUE_TEMPLATE/requirement.md`, in the `language` resolved at step
+   1. Its five sections and their order must match the fallback body that
    `github-project-manage` uses; their wording is in `language`, and that skill
    and the audit read the wording from this file rather than from the asset.
-   When `language` is `en` or not set, write the asset as it is. Otherwise
-   translate it and keep every one of these:
-   - the five frontmatter keys `name`, `about`, `title`, `labels`, `assignees`;
-     translate the values of `name` and `about` and leave the rest;
-   - the five level-two headings, in the asset's order, with their text
-     translated;
-   - the HTML comment under every heading, translated;
-   - the two empty `- [ ]` lines under the acceptance criteria heading;
-   - the `Waiting on:` example line, with the prefix as written and the reason
-     after it translated. The prefix is what the audit matches;
-   - the guidance about `None`, naming the one word in `language` that stands
-     for "nothing here" under the last two sections.
-   Never rewrite a template that already exists, whatever language it is in. A
-   repository template is the repository's own, and `github-project-manage`
-   takes its headings from it either way. When `language` is set and the
-   existing template is visibly in another language, say so under Notes: new
-   Issues take their headings from the template and their prose from
-   `language`, and the user can rewrite the template by hand or delete it and
-   run `repair` to regenerate it.
+   When `language` is `en`, write the asset as it is. Otherwise translate the
+   values of `name` and `about`, the headings, the HTML comments, and the
+   reason after `Waiting on:`, in place, and leave everything else exactly as
+   the asset has it. A template that already exists is the repository's own,
+   whatever language it is in, and `github-project-manage` takes its headings
+   from it either way. When it is visibly in another language than `language`,
+   say so under Notes: new Issues take their headings from the template and
+   their prose from `language`, and the user can rewrite the template by hand
+   or delete it and run `repair` to regenerate it.
 9. **Labels and Issue Types.** Check the labels the user relies on, and whether
    the owner has Issue Types defined. Missing Issue Types are reported, not
    created; they are an owner level setting.
 10. **Config file.** Write or check `.github/github-project.yml` from
     `assets/github-project.yml`, filled with the real owner, repo, project
-    number, project title, and `language`. Read the asset before writing it.
-    `language` is a BCP 47 tag such as `en`, `zh-CN`, or `ja`, and it comes
-    from `--language`. In `initialize`, when neither `--language` nor an
-    existing config supplies one, ask the user for a tag before writing
-    anything; never guess one and never default to one. In `repair`,
-    `--language <tag>` adds the key to a config that lacks it, which is every
-    config written before 0.3.0, and changes it when the value differs; before
-    changing it, say that existing Issues and the existing template stay as
-    they are and only Issues created afterwards take the new language. In
-    `inspect`, report the key as set or not set and write nothing. The asset's
-    comment says what the key governs and what it never governs; write that
-    comment as it is. **Never write discovered option names into it.** The file
+    number, project title, and the `language` resolved at step 1. Read the
+    asset before writing it. `repair --language <tag>` is how a config written
+    before 0.3.0, which has no `language` key, gets one. The asset's comment
+    says what the key governs and what it never governs; write that comment as
+    it is. **Never write discovered option names into it.** The file
     has no `status:` or `priority:` keys: rules 7 and 8 own that vocabulary.
     Recording a drifted name such as
     `In progress` here would silence `meta.nonstandard-status` on every item
@@ -175,10 +166,6 @@ write only where the step reports a gap the user agreed to fix.
 - **Never renumber, reorder, or rename an existing option** to fit the model
   without saying so first. Renaming `In progress` to `In Progress` rewrites the
   value on every item that carries it.
-- **Never rewrite an existing Issue template to change its language.** The
-  template is a repository file that people may have edited, and both other
-  skills read their headings from it as it is. Report the mismatch and leave
-  the rewrite to the user.
 - **When the web UI is the only reliable path**, say so, give the exact URL and
   the exact steps, and report the item as `needs web UI`. Never describe an
   unperformed change as done. This is the single most damaging failure mode
@@ -219,7 +206,6 @@ what was sent.
 
 Repository: <owner>/<repo>
 Project: <title> #<number> (<url>)
-Language: <tag | not set>
 Mode: <inspect|initialize|repair>
 
 ## Checks
