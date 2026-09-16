@@ -164,13 +164,15 @@ syntax the placeholder uses.** The HTML comment is one syntax and not the only
 one. A heading followed by nothing, by whitespace only, or by `TBD` counts as
 absent. So does a list marker with no text after it: `- [ ]`, `- [x]`, `-`, and
 `*` are template scaffolding until someone writes a line, and the template this
-bucket ships supplies two empty checkboxes under `## Acceptance criteria`. Test
-what a section says, not that it has bytes.
+bucket ships supplies two empty checkboxes under `## Acceptance criteria`. The
+placeholder words are English examples, and their equivalents in the Issue's
+language count the same. Test what a section says, not that it has bytes.
 
-`None` also counts as absent, except under `## Non-goals` and
-`## Additional context`: both templates this bucket ships instruct the author to
-write `None` rather than delete a section, so there `None` is a real answer and
-the section counts as present.
+`None`, or its equivalent in the Issue's language (`无`, `なし`, and so on),
+also counts as absent, except under the `## Non-goals` and
+`## Additional context` equivalents: both templates this bucket ships instruct
+the author to write `None` rather than delete a section, so there `None` is a
+real answer and the section counts as present.
 
 ---
 
@@ -243,9 +245,10 @@ the section counts as present.
 - **Severity**: warning
 - **Detects**: one Issue carrying two or more distinct outcomes, which breaks
   rule 4.
-- **Find it**: a title joining two verbs with `and`, a comma, or a slash;
-  acceptance criteria covering two surfaces that ship at different times; a
-  body where two different people would own different parts.
+- **Find it**: a title joining two verbs with `and`, a comma, or a slash, or
+  their equivalents in the Issue's language; acceptance criteria covering two
+  surfaces that ship at different times; a body where two different people
+  would own different parts.
 - **Expected**: one Issue equals one unit of work.
 - **Action**: narrow the Issue, or split it when the parts are each
   schedulable.
@@ -276,7 +279,9 @@ the section counts as present.
   rules never fire on the same Issue.
 - **Find it**: body text matching `blocked by`, `depends on`, `waiting on`,
   `after #`, `once #`, or `needs <team>`, with an empty `blocked_by` list on
-  the dependencies endpoint, and `status` not `Blocked`.
+  the dependencies endpoint, and `status` not `Blocked`. These are English
+  examples; the same meanings in the Issue's language match. The `Detects`
+  line is the test, and the list is not exhaustive.
 - **Expected**: the dependency exists as a relation, or as `Blocked` when there
   is no Issue to relate to, not only as prose.
 - **Action**: when what it waits on is another Issue, create the `blocked-by`
@@ -289,8 +294,10 @@ the section counts as present.
 
 - **Severity**: info
 - **Detects**: a title naming an area or a bare verb rather than the outcome.
-- **Find it**: titles under about four words, titles that are a single noun, or
-  titles like `Bug`, `Fix`, `Improvements`, `Orders`, `Cleanup`.
+- **Find it**: titles under about four words in English, titles that are a
+  single noun, or titles like `Bug`, `Fix`, `Improvements`, `Orders`,
+  `Cleanup`. The word count is a heuristic that does not transfer to languages
+  without word spacing, so judge by whether the title names an outcome.
 - **Expected**: the title names what becomes true.
 - **Action**: retitle.
 - **Owner**: `github-project-manage`
@@ -489,7 +496,9 @@ the section counts as present.
   is the record `github-project-manage` writes when it moves an item to
   `Blocked`, and it is the only thing this rule looks for: prose that happens
   to mention a dependency is `issue.undeclared-dependency`'s concern, not a
-  `Blocked` record.
+  `Blocked` record. The prefix is not translated. A localized template and a
+  `language` setting change the reason after it, never the prefix, so this
+  comparison is the same in every language.
 - **Expected**: rule 9 holds: every `Blocked` item says in its body what it
   waits on.
 - **Action**: write a `Waiting on:` line into the body. If the body says the

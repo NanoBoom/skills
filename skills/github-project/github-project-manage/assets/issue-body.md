@@ -4,6 +4,10 @@ Use this structure **only** when the repository has no applicable template under
 `.github/ISSUE_TEMPLATE/` on the default branch. A repository template always
 wins, including its extra fields and its wording.
 
+When `.github/github-project.yml` sets `language`, write the headings and the
+content in that language. The five sections, their order, and the
+`Waiting on:` prefix stay as they are.
+
 Copy the block below, keep all five headings even when a section is short, and
 replace the italic guidance with real content. Delete no heading: an empty
 heading is a visible gap, a missing heading is invisible.
@@ -80,8 +84,9 @@ Blocked by nothing.
   from the Issue itself.
 - Keep the criteria about outcomes, not about activities. "Refactor the writer"
   is not a criterion. "The response streams" is.
-- If Non-goals or Additional context would be genuinely empty, write "None". Do
-  not invent content to fill it, and do not drop the heading. "None" is not an
+- If Non-goals or Additional context would be genuinely empty, write "None", or
+  its equivalent in the Issue's language. Do not invent content to fill it, and
+  do not drop the heading. "None" is not an
   answer under Background and goal, Scope, or Acceptance criteria: an audit
   counts it as absent there, which is correct, because those three are what make
   the Issue deliverable.

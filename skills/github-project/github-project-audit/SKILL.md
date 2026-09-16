@@ -35,11 +35,22 @@ audit:
   require_assignee: true
   require_priority: true
   require_issue_type: false
+language: en
 ```
 
 The config file carries no `Status` or `Priority` option names. Rules 7 and 8
 own that vocabulary, they are literal, and the catalog compares against those
 literals. A repository cannot configure its way out of them.
+
+This skill reads `language` for one purpose, judging text. The catalog's
+example words and phrases are English; their equivalents in `language`, or in
+the language an Issue is actually written in when the key is absent, count the
+same. Everything the catalog compares literally, the `Status` and `Priority`
+names and the `Waiting on:` prefix, is compared literally in every language.
+The report itself is conversation output, not GitHub data, and this key does
+not govern it. An Issue written in a language other than `language` is not a
+catalog finding; mention it under `Additional observations` when it matters to
+the reader.
 
 Resolve the Project by `project.number`, then **compare the title the API
 returns to `project.title` and stop on a mismatch**:

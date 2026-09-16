@@ -15,6 +15,21 @@ owner: example-org
 # The repository whose Issues are the requirements.
 repo: example-repo
 
+# The language every piece of free text the three skills write is in: Issue
+# titles and bodies, the Issue template, closing and reopening notes, and the
+# reason after `Waiting on:`. A BCP 47 tag such as en, zh-CN, or ja.
+#
+# Text a skill compares by name is not free text and never follows this key:
+# the Status and Priority field and option names, the Board and Backlog view
+# names, the `Waiting on:` prefix, and the `Blocked by: #n` line. Those have
+# the same single owner as the option sets below. The section headings come
+# from the repository's own Issue template, which github-project-setup writes
+# in this language once and never rewrites.
+#
+# Remove the key and the skills write in the language of the conversation and
+# say so under Assumptions, which is what 0.2.0 did.
+language: en
+
 project:
   # The Projects v2 number, visible in the Project URL. Classic Projects are
   # not supported.

@@ -4,12 +4,13 @@ description: >-
   Inspects, initializes, or repairs the GitHub environment that Issue based
   requirement management needs: the Project, its Status and Priority fields,
   its Board and Backlog views, the built-in automations, the repository Issue
-  template, and .github/github-project.yml. Use when the user says "initialize
+  template, .github/github-project.yml, and the language its Issue text is
+  written in. Use when the user says "initialize
   the GitHub Issue workflow", "set up a requirements project", "create a
   minimal requirement Project", "check the Project field configuration", "add
-  the Priority field", "repair the Issue management environment", or invokes
-  /github-project-setup.
-argument-hint: "[inspect|initialize|repair] [--project <number>] [--title <title>]"
+  the Priority field", "repair the Issue management environment", "set the
+  language Issues are written in", or invokes /github-project-setup.
+argument-hint: "[inspect|initialize|repair] [--project <number>] [--title <title>] [--language <tag>]"
 ---
 
 # Set up the GitHub Issue management environment
@@ -111,17 +112,48 @@ write only where the step reports a gap the user agreed to fix.
    `references/automation-setup.md`.
 8. **Issue template.** Check `.github/ISSUE_TEMPLATE/` on the default branch.
    When none applies, read `assets/issue-template.md` and write it to
-   `.github/ISSUE_TEMPLATE/requirement.md`. Its headings must match the
-   fallback body that `github-project-manage` uses, because that skill defers
-   to this template at runtime.
+   `.github/ISSUE_TEMPLATE/requirement.md`, in the configured `language`. Its
+   five sections and their order must match the fallback body that
+   `github-project-manage` uses; their wording is in `language`, and that skill
+   and the audit read the wording from this file rather than from the asset.
+   When `language` is `en` or not set, write the asset as it is. Otherwise
+   translate it and keep every one of these:
+   - the five frontmatter keys `name`, `about`, `title`, `labels`, `assignees`;
+     translate the values of `name` and `about` and leave the rest;
+   - the five level-two headings, in the asset's order, with their text
+     translated;
+   - the HTML comment under every heading, translated;
+   - the two empty `- [ ]` lines under the acceptance criteria heading;
+   - the `Waiting on:` example line, with the prefix as written and the reason
+     after it translated. The prefix is what the audit matches;
+   - the guidance about `None`, naming the one word in `language` that stands
+     for "nothing here" under the last two sections.
+   Never rewrite a template that already exists, whatever language it is in. A
+   repository template is the repository's own, and `github-project-manage`
+   takes its headings from it either way. When `language` is set and the
+   existing template is visibly in another language, say so under Notes: new
+   Issues take their headings from the template and their prose from
+   `language`, and the user can rewrite the template by hand or delete it and
+   run `repair` to regenerate it.
 9. **Labels and Issue Types.** Check the labels the user relies on, and whether
    the owner has Issue Types defined. Missing Issue Types are reported, not
    created; they are an owner level setting.
 10. **Config file.** Write or check `.github/github-project.yml` from
     `assets/github-project.yml`, filled with the real owner, repo, project
-    number, and project title. Read the asset before writing it. **Never write
-    discovered option names into it.** The file has no `status:` or `priority:`
-    keys: rules 7 and 8 own that vocabulary. Recording a drifted name such as
+    number, project title, and `language`. Read the asset before writing it.
+    `language` is a BCP 47 tag such as `en`, `zh-CN`, or `ja`, and it comes
+    from `--language`. In `initialize`, when neither `--language` nor an
+    existing config supplies one, ask the user for a tag before writing
+    anything; never guess one and never default to one. In `repair`,
+    `--language <tag>` adds the key to a config that lacks it, which is every
+    config written before 0.3.0, and changes it when the value differs; before
+    changing it, say that existing Issues and the existing template stay as
+    they are and only Issues created afterwards take the new language. In
+    `inspect`, report the key as set or not set and write nothing. The asset's
+    comment says what the key governs and what it never governs; write that
+    comment as it is. **Never write discovered option names into it.** The file
+    has no `status:` or `priority:` keys: rules 7 and 8 own that vocabulary.
+    Recording a drifted name such as
     `In progress` here would silence `meta.nonstandard-status` on every item
     while `project.field-option-drift` kept erroring on the same field, which is
     two `error` rules in one catalog permanently disagreeing. Report drift at
@@ -143,6 +175,10 @@ write only where the step reports a gap the user agreed to fix.
 - **Never renumber, reorder, or rename an existing option** to fit the model
   without saying so first. Renaming `In progress` to `In Progress` rewrites the
   value on every item that carries it.
+- **Never rewrite an existing Issue template to change its language.** The
+  template is a repository file that people may have edited, and both other
+  skills read their headings from it as it is. Report the mismatch and leave
+  the rewrite to the user.
 - **When the web UI is the only reliable path**, say so, give the exact URL and
   the exact steps, and report the item as `needs web UI`. Never describe an
   unperformed change as done. This is the single most damaging failure mode
@@ -162,8 +198,10 @@ and change nothing:
 - the workflow exists and is enabled. The target value is not part of this
   test, because step 7 established that the API cannot read it. Idempotence here
   means the workflow is on, never that it is known to be configured correctly;
-- the Issue template file already exists on the default branch;
-- the config file already holds the current values. "Already satisfied" here
+- the Issue template file already exists on the default branch, whatever
+  language it is in;
+- the config file already holds the current values, including a `language`
+  equal to `--language` when that flag was given. "Already satisfied" here
   means its values were checked against GitHub this run, not that the file was
   non-empty. Step 3's title comparison runs either way.
 
@@ -181,6 +219,7 @@ what was sent.
 
 Repository: <owner>/<repo>
 Project: <title> #<number> (<url>)
+Language: <tag | not set>
 Mode: <inspect|initialize|repair>
 
 ## Checks
@@ -197,6 +236,7 @@ Mode: <inspect|initialize|repair>
 - Issue template: <ok at <path> | written | missing>
 - Issue Types: <configured: <names> | not configured for this owner>
 - Config file .github/github-project.yml: <ok | written | missing>
+- Language in config: <ok: <tag> | not set, run: repair --language <tag>>
 
 ## Changes made
 
