@@ -55,6 +55,16 @@ the Projects scope. If a Project call is rejected, run
 `gh auth refresh -s project,read:project`. Classic Projects are not supported;
 these skills target Projects v2 only.
 
+## Upgrading from 0.1.0
+
+Version 0.2.0 adds `Blocked` to the `Status` options, for Issues that wait on
+something with no Issue in the repository. A Project set up by 0.1.0 has three
+options, so the first `github-project-setup inspect` and the first audit after
+upgrading report `project.field-option-drift` until you run
+`github-project-setup repair`, which adds the option and keeps every existing
+value. Going back to 0.1.0 reports the added option as drift, and removing an
+option is a deletion the skill refuses, so that step is a web UI change.
+
 ## Skills
 
 - **[github-project-setup](./github-project-setup/SKILL.md)**: inspects, initializes, or repairs the Project fields, views, built-in automations, Issue template, and config file.

@@ -7,24 +7,39 @@ Project could hold belongs in the Issue.
 
 | Field | Type | Options, in this order | Purpose |
 |---|---|---|---|
-| `Status` | single select | `Todo`, `In Progress`, `Done` | Where the work is. Written by automation, and by hand only for `In Progress`. |
+| `Status` | single select | `Todo`, `In Progress`, `Blocked`, `Done` | Where the work is. Written by automation for `Todo` and `Done`, by hand for `In Progress` and `Blocked`. |
 | `Priority` | single select | `P0`, `P1`, `P2` | What to pick up next. Always set by hand. |
 
 `Title`, `Assignees`, `Labels`, `Repository`, `Milestone`, and `Linked pull
 requests` come with every Project and need no setup. `Status` is created by
-GitHub on a new Project with the default options `Todo`, `In Progress`, `Done`,
-which already match, so the usual work is verification rather than creation.
+GitHub on a new Project with the default options `Todo`, `In Progress`, `Done`.
+The usual work is therefore adding `Blocked` to a field that already exists,
+with the option list mutation below, rather than creating the field.
 
-There is no `Blocked` option and there never is one. A block lives in the Issue
-and in the dependency relation. Adding `Blocked` splits the meaning of the board
-and makes the `Todo` count wrong, which is why the audit catalog treats a
-non-standard status option as an error rather than a preference.
+`Blocked` carries one kind of block only: the Issue waits on something that has
+no Issue in this repository, such as a vendor, a customer, legal, or a team in
+another organization. A person sets it, and the entry condition is a line in the
+body beginning `Waiting on:` that says what the Issue waits on. A block by
+another Issue is not `Blocked`: it is a `blocked-by` relation, and the Issue
+stays in `Todo`, where the relation and its blocker's state can be checked.
+This keeps the `Todo` count honest rather than corrupting it: `Todo` holds only
+work that can be picked up now, and the audit's `state.blocked-without-record`
+checks that every `Blocked` item has its reason in the Issue.
+
+The order in the table is the order for a field created from nothing. A
+repaired field appends `Blocked` after its existing options instead, for the
+reason given under *Repairing option drift*. Drift is compared on the set of
+names, not on their order, so both orders pass.
 
 ### Semantics
 
-- `Todo`: accepted into the backlog, not started. A blocked Issue sits here.
+- `Todo`: accepted into the backlog, not started. An Issue blocked by another
+  Issue sits here, with the `blocked-by` relation.
 - `In Progress`: someone is actively working on it now. Set together with an
   Assignee, and only when the user says they are starting.
+- `Blocked`: open, waiting on something outside this repository's Issues. Set
+  by hand together with a line in the body that says what it waits on, and
+  cleared by hand when that lifts. Never used for a block by another Issue.
 - `Done`: the Issue is closed. Set by automation on close.
 
 `P0` is drop everything. `P1` is planned for the current cycle. `P2` is
@@ -75,7 +90,7 @@ gh project field-create <project> --owner <owner> \
 gh project field-create <project> --owner <owner> \
   --name "Status" \
   --data-type SINGLE_SELECT \
-  --single-select-options "Todo,In Progress,Done"
+  --single-select-options "Todo,In Progress,Blocked,Done"
 ```
 
 `--single-select-options` takes one comma separated string. Option names
@@ -100,7 +115,8 @@ cat <<'JSON' | gh api graphql --input -
     "options": [
       {"name": "Todo", "color": "GRAY", "description": ""},
       {"name": "In Progress", "color": "YELLOW", "description": ""},
-      {"name": "Done", "color": "GREEN", "description": ""}
+      {"name": "Done", "color": "GREEN", "description": ""},
+      {"name": "Blocked", "color": "RED", "description": ""}
     ]
   }
 }
@@ -121,6 +137,15 @@ Three things to know before running it:
    without an explicit request. Report the extra option as drift and let the
    user decide.
 
+A Project set up before `Blocked` existed is exactly this mutation's case: send
+the existing options exactly as they are, in their current order, and append
+`Blocked` last, as the payload above does. Appending changes no existing
+option's name or position, so no item can change value whichever way GitHub
+matches the new list to the old one. Putting `Blocked` third, to match the
+table, would reorder `Done`, which this skill's boundaries forbid without
+saying so first. Read the options back from the mutation's response and
+confirm the three old names are still present before reporting the repair.
+
 If the mutation is rejected or the schema differs on the host, stop and report
 the web UI path: the Project page, then the field header menu, then `Edit
 values`.
@@ -129,7 +154,7 @@ values`.
 
 | View | Layout | Grouped or sorted by | Purpose |
 |---|---|---|---|
-| `Board` | board | grouped by `Status` | The working view. Three columns. |
+| `Board` | board | grouped by `Status` | The working view. Four columns. |
 | `Backlog` | table | sorted by `Priority`, then by creation date | The planning view. |
 
 GitHub's public API does not offer a reliable way to create or configure a

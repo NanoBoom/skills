@@ -1,6 +1,6 @@
 # The audit rule catalog
 
-Twenty-seven rules with stable IDs. Read all of them before evaluating. Every
+Twenty-eight rules with stable IDs. Read all of them before evaluating. Every
 rule is reported as findings, passed, or not evaluated with a reason. A rule
 you skipped and a rule that passed look identical in a report, which is exactly
 the failure this catalog exists to prevent.
@@ -112,6 +112,7 @@ Every rule below reads these field names and no others:
 | `itemType` | `Issue`, `PullRequest`, `DraftIssue` | the item-list projection |
 | `state` | `OPEN` or `CLOSED` | the Issue list |
 | `stateReason` | string, may be empty | the Issue list |
+| `body` | string, HTML comments stripped as in *Body section detection* | the Issue list |
 | `status` | **plain string**, or null when unset | the item-list projection |
 | `priority` | plain string, or null when unset | the item-list projection |
 
@@ -268,13 +269,19 @@ the section counts as present.
 ### `issue.undeclared-dependency`
 
 - **Severity**: warning
-- **Detects**: the body says the work waits on something, and no `blocked-by`
-  relation exists.
+- **Detects**: the body says the work waits on something, no `blocked-by`
+  relation exists, and the item is not `Blocked`. A `Blocked` item has declared
+  its wait through the status; the opposite gap, `Blocked` with no
+  `Waiting on:` line in the body, is `state.blocked-without-record`, so the two
+  rules never fire on the same Issue.
 - **Find it**: body text matching `blocked by`, `depends on`, `waiting on`,
   `after #`, `once #`, or `needs <team>`, with an empty `blocked_by` list on
-  the dependencies endpoint.
-- **Expected**: the dependency exists as a relation, not only as prose.
-- **Action**: create the `blocked-by` relation. Keep the prose too.
+  the dependencies endpoint, and `status` not `Blocked`.
+- **Expected**: the dependency exists as a relation, or as `Blocked` when there
+  is no Issue to relate to, not only as prose.
+- **Action**: when what it waits on is another Issue, create the `blocked-by`
+  relation and keep the prose. When it has no Issue here, move the item to
+  `Blocked` with `github-project-manage`.
 - **Owner**: `github-project-manage`
 - **Auto-fixable**: yes, when the referenced Issue number is unambiguous.
 
@@ -403,20 +410,19 @@ the section counts as present.
 
 - **Severity**: error
 - **Detects**: an item whose `Status` value is outside `Todo`, `In Progress`,
-  `Done`, including any `Blocked` value, which rule 9 forbids, **and an item in
-  the Project whose `Status` is unset**. The catalog has no separate rule for a
-  missing status, on purpose: an absent value is a non-standard value, because an
-  item with no `Status` is invisible on a board grouped by `Status` exactly as a
-  `Blocked` item corrupts one.
-- **Find it**: `status` is not one of `Todo`, `In Progress`, `Done`. A wrong
-  value fires on any item type, because a `Blocked` column corrupts the board
-  whatever sits in it. The unset half is limited to `itemType == "Issue"`: its
-  action sets `Todo` or `Done` from the Issue's own state, which a draft does
-  not have. Rule 7 is the only owner of this set; there is no configurable
-  alternative.
-- **Expected**: rule 7 holds exactly, and every item carries one of the three.
-- **Action**: for a wrong value, move the item to a valid status; a `Blocked`
-  value becomes `Todo` plus a `blocked-by` relation. For an unset value, set
+  `Blocked`, `Done`, **and an item in the Project whose `Status` is unset**. The
+  catalog has no separate rule for a missing status, on purpose: an absent value
+  is a non-standard value, because an item with no `Status` is invisible on a
+  board grouped by `Status` exactly as an unknown column corrupts one.
+- **Find it**: `status` is not one of `Todo`, `In Progress`, `Blocked`, `Done`.
+  A wrong value fires on any item type, because a column the model does not
+  know corrupts the board whatever sits in it. The unset half is limited to
+  `itemType == "Issue"`: its action sets `Todo` or `Done` from the Issue's own
+  state, which a draft does not have. Rule 7 is the only owner of this set;
+  there is no configurable alternative.
+- **Expected**: rule 7 holds exactly, and every item carries one of the four.
+- **Action**: for a wrong value, move the item to a valid status. For an unset
+  value, set
   `Todo` for an open Issue and `Done` for a closed one, and check
   `project.automation-item-added-missing`, which is the usual cause of a whole
   batch of unset values.
@@ -445,11 +451,12 @@ the section counts as present.
 ### `state.closed-not-done`
 
 - **Severity**: error
-- **Detects**: a closed Issue whose Project item is `Todo` or `In Progress`, so
-  the board over-counts open work.
-- **Find it**: in the joined record, `state` is `CLOSED` and `status` is `Todo`
-  or `In Progress`. An unset `status` is `meta.nonstandard-status`, not this
-  rule, which is what keeps every Issue on exactly one row of the status matrix.
+- **Detects**: a closed Issue whose Project item is `Todo`, `In Progress`, or
+  `Blocked`, so the board over-counts open work.
+- **Find it**: in the joined record, `state` is `CLOSED` and `status` is `Todo`,
+  `In Progress`, or `Blocked`. An unset `status` is `meta.nonstandard-status`,
+  not this rule, which is what keeps every Issue on exactly one row of the
+  status matrix.
 - **Expected**: closed Issues are `Done`.
 - **Action**: re-read once first, since the `Item closed` automation is not
   instant. If it persists across several Issues, the workflow is off and the
@@ -465,9 +472,32 @@ the section counts as present.
 - **Find it**: in the joined record, `state` is `OPEN` and `status` is `Done`.
 - **Expected**: only closed Issues are `Done`.
 - **Action**: decide which is true. Either close the Issue, or move the item
-  back to `Todo` or `In Progress`.
+  back to `Todo`, `In Progress`, or `Blocked`.
 - **Owner**: `github-project-manage`
 - **Auto-fixable**: no. Which side is right is a human decision.
+
+### `state.blocked-without-record`
+
+- **Severity**: warning
+- **Detects**: an open Issue whose Project item is `Blocked` while the body
+  does not say what it waits on. The Project is holding a fact the Issue does
+  not, which rule 1 forbids, and nobody reading the Issue can tell when the
+  block lifts.
+- **Find it**: `itemType` is `Issue`, `state` is `OPEN`, `status` is `Blocked`,
+  and the body, with HTML comments stripped as in *Body section detection*,
+  has no line beginning `Waiting on:`, compared case-insensitively. That prefix
+  is the record `github-project-manage` writes when it moves an item to
+  `Blocked`, and it is the only thing this rule looks for: prose that happens
+  to mention a dependency is `issue.undeclared-dependency`'s concern, not a
+  `Blocked` record.
+- **Expected**: rule 9 holds: every `Blocked` item says in its body what it
+  waits on.
+- **Action**: write a `Waiting on:` line into the body. If the body says the
+  Issue is blocked by another Issue, such as `Blocked by: #101`, create the
+  `blocked-by` relation and move the item back to `Todo` instead (rule 9).
+- **Owner**: `github-project-manage`
+- **Auto-fixable**: no. Only a person knows what the Issue waits on. A batch of
+  these usually means items were dragged into `Blocked` in the web UI.
 
 ---
 
@@ -539,10 +569,11 @@ the section counts as present.
 - **Severity**: error
 - **Detects**: a `Status` or `Priority` field whose option set is not exactly
   the required one, including case and spacing. `In progress` is drift.
-- **Find it**: compare the option names to `Todo`, `In Progress`, `Done` and to
-  `P0`, `P1`, `P2`. These literals are rules 7 and 8, and they are the same
-  literals `meta.nonstandard-status` and `meta.nonstandard-priority` compare
-  against, so the three rules can never disagree about the same field.
+- **Find it**: compare the option names to `Todo`, `In Progress`, `Blocked`,
+  `Done` and to `P0`, `P1`, `P2`. These literals are rules 7 and 8, and they
+  are the same literals `meta.nonstandard-status` and
+  `meta.nonstandard-priority` compare against, so the three rules can never
+  disagree about the same field.
 - **Expected**: rules 7 and 8 hold exactly, with no extra options.
 - **Action**: correct the option set. Report which items would lose a value,
   because replacing the option list removes anything omitted, and renaming an
