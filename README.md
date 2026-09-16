@@ -96,7 +96,7 @@ in the [bucket README](./skills/github-project/README.md).
 
 | Skill | Description |
 |-------|-------------|
-| `/github-project:github-project-setup` | Inspect, initialize, or repair the Project, its `Status` and `Priority` fields, the Board and Backlog views, the built-in automations, the Issue template, and `.github/github-project.yml` |
+| `/github-project:github-project-setup` | Inspect, initialize, or repair the Project, its `Status` and `Priority` fields, the Board and Backlog views, the built-in automations, the Issue template, `.github/github-project.yml`, and the language its Issue text is written in |
 | `/github-project:github-project-manage` | Run the Issue lifecycle across eleven modes, from drafting a requirement to closing it, keeping each Issue's Project item in step |
 | `/github-project:github-project-audit` | Read-only audit of Issue quality and Issue-to-Project consistency against a 28-rule catalog with stable rule IDs |
 

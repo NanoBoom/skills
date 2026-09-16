@@ -45,7 +45,7 @@
       "name": "github-project",
       "description": "GitHub Issue requirement management with the gh CLI - set up the Project, its fields, views and automations, run the Issue lifecycle end to end, and audit Issue quality and Issue-to-Project consistency against a stable rule catalog",
       "source": "./skills/github-project",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "development",
       "license": "MIT",
       "strict": true,

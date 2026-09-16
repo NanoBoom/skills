@@ -248,7 +248,8 @@ then the field, then read both back:
 gh issue view <number> --repo <owner>/<repo> --json body --jq .body > /tmp/issue-body.md
 # Edit /tmp/issue-body.md: add one line beginning "Waiting on:", such as
 #   Waiting on: vendor API key, expected 2026-10-01
-# The prefix is what the audit checks for; the rest is for the reader.
+# The prefix is what the audit checks for and is never translated; the rest
+# is for the reader, in the Issue's language.
 gh issue edit <number> --repo <owner>/<repo> --body-file /tmp/issue-body.md
 
 # 2. Set the field with the item id found above.
@@ -300,6 +301,8 @@ null. Take `state` from `gh issue list` and join on `number`. The `select(.archi
 Filter on `.content.type == "Issue"` when the question is about requirements.
 
 ## close and reopen
+
+The comment strings below are the shape; write them in the Issue's language.
 
 ```bash
 gh issue close <number> --repo <owner>/<repo> \

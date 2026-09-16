@@ -29,11 +29,28 @@ repo: example-repo
 project:
   number: 1
   title: Product Delivery
+language: en
 ```
 
-Those four values are all this skill reads. The `Status` and `Priority` option
+Those five values are all this skill reads. The `Status` and `Priority` option
 names are not configurable: rules 7 and 8 own them, and this skill uses those
 literals.
+
+`language` is a BCP 47 tag, and it governs every piece of free text this skill
+writes to GitHub for a new Issue: the title, the content under each heading,
+the child Issues a `split` creates, and the `draft` output that will become
+one. It governs them whatever language the user gave the instruction in. Text
+added later to an existing Issue by `refine`, `edit`, `relate`, `move`,
+`close`, or `reopen`, and the parent edit a `split` makes, follows the
+language that Issue already uses, so one body stays in one language;
+translating an Issue is a change the user asks for through `edit`. The
+headings come from the repository template, in whatever language it is in.
+What never follows `language`: the `Status` and `Priority` option names, the
+`Waiting on:` prefix, the `Blocked by: #n` line, and the `## Dependencies`
+fallback heading, all of which another skill or a later run matches by name.
+When the key is absent, write in the language of the conversation and say so
+under `## Assumptions`. When the user explicitly asks for another language for
+one run, do that and say so under `## Assumptions`.
 
 Resolve the Project by `project.number`, then **compare the title the API returns
 to `project.title` and stop on a mismatch**:
@@ -225,8 +242,9 @@ unsupported relation as created.
   requirement is cancelled or superseded.
 - Use `completed` for delivered work and `not planned` for cancelled,
   superseded, or duplicate work.
-- Always leave a closing note that states which of the two it is and why. For a
-  duplicate or a supersession, link the Issue that replaces it.
+- Always leave a closing note that states which of the two it is and why, in
+  the Issue's language. For a duplicate or a supersession, link the Issue that
+  replaces it.
 - Never close an Issue because a pull request merged. Confirm the acceptance
   criteria against the Issue first.
 - On `reopen`, restore the `Status` the user asks for, defaulting to `Todo`, and

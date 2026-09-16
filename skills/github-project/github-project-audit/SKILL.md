@@ -39,7 +39,10 @@ audit:
 
 The config file carries no `Status` or `Priority` option names. Rules 7 and 8
 own that vocabulary, they are literal, and the catalog compares against those
-literals. A repository cannot configure its way out of them.
+literals. A repository cannot configure its way out of them. The file's
+`language` key is not read here either: the catalog judges every Issue in the
+language it is written in, and its example words and phrases are English with
+their equivalents in that language counting the same.
 
 Resolve the Project by `project.number`, then **compare the title the API
 returns to `project.title` and stop on a mismatch**:

@@ -14,9 +14,10 @@ Replace each comment below with real content. The comments are guidance, not an
 answer: an audit strips them before deciding whether a section was filled in, so
 an Issue submitted with them left in place reads as empty.
 
-"None" is a real answer under Non-goals and Additional context only. Under
-Background and goal, Scope, or Acceptance criteria it reads as absent, because
-those three are what make the Issue deliverable.
+"None", or its equivalent in the language this template is written in, is a
+real answer under Non-goals and Additional context only. Under Background and
+goal, Scope, or Acceptance criteria it reads as absent, because those three are
+what make the Issue deliverable.
 
 The two empty checkboxes below are placeholders in the same way the comments
 are. An audit counts only a checkbox with text after the marker, so submitting
@@ -53,4 +54,5 @@ Record a block here as well as in the issue dependency, for example
 "Blocked by: #101". A block with no Issue to relate to is recorded here alone,
 as one line beginning "Waiting on:", for example
 "Waiting on: vendor API key, expected 2026-10-01", and moves the Project item
-to Blocked. -->
+to Blocked. The "Waiting on:" prefix stays in English whatever language the
+rest of the Issue is in; the reason after it is for the reader. -->

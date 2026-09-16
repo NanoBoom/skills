@@ -55,6 +55,25 @@ the Projects scope. If a Project call is rejected, run
 `gh auth refresh -s project,read:project`. Classic Projects are not supported;
 these skills target Projects v2 only.
 
+## Upgrading from 0.2.0
+
+Version 0.3.0 adds a `language` key to `.github/github-project.yml`, a BCP 47
+tag such as `zh-CN`. Every Issue created from then on is written in that
+language, title and body, and so is the Issue template. Text added later to an
+Issue that already exists, such as a closing note or the reason after
+`Waiting on:`, follows the language that Issue already uses. The names the
+skills match literally stay as they are in every language: the `Status` and
+`Priority` options, the `Board` and `Backlog` views, and the `Waiting on:`
+prefix itself.
+
+A configuration written by 0.2.0 has no such key, and every skill then behaves
+as 0.2.0 did, writing in the language of the conversation and saying so under
+Assumptions. Run `github-project-setup repair --language <tag>` to set it. The
+existing Issue template and existing Issues are not rewritten; the template
+keeps supplying the headings, and new Issues take their prose from `language`.
+To get a template in the new language, delete the old one and run `repair`, or
+rewrite it by hand.
+
 ## Upgrading from 0.1.0
 
 Version 0.2.0 adds `Blocked` to the `Status` options, for Issues that wait on
@@ -67,6 +86,6 @@ option is a deletion the skill refuses, so that step is a web UI change.
 
 ## Skills
 
-- **[github-project-setup](./github-project-setup/SKILL.md)**: inspects, initializes, or repairs the Project fields, views, built-in automations, Issue template, and config file.
+- **[github-project-setup](./github-project-setup/SKILL.md)**: inspects, initializes, or repairs the Project fields, views, built-in automations, Issue template, config file, and the language Issue text is written in.
 - **[github-project-manage](./github-project-manage/SKILL.md)**: runs the Issue lifecycle from drafting a requirement to closing it, and keeps the Project item in step.
 - **[github-project-audit](./github-project-audit/SKILL.md)**: read-only audit of Issue quality and Issue-to-Project consistency against a stable rule catalog.
