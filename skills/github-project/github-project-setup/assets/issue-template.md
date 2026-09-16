@@ -51,5 +51,6 @@ what to run or look at, and what result counts as a pass. Not activities:
 <!-- Links, prior discussion, affected users, constraints, known dependencies.
 Record a block here as well as in the issue dependency, for example
 "Blocked by: #101". A block with no Issue to relate to is recorded here alone,
-for example "Waiting on: vendor API key, expected 2026-10-01", and moves the
-Project item to Blocked. -->
+as one line beginning "Waiting on:", for example
+"Waiting on: vendor API key, expected 2026-10-01", and moves the Project item
+to Blocked. -->

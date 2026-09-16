@@ -164,8 +164,7 @@ satisfied, report it as such, and change nothing:
 - the Assignee, Label, or Issue Type is already set to the requested value;
 - the parent, child, or dependency relation already exists;
 - the Issue is already closed, or already open;
-- the item is already `Blocked` and the body already records the same reason.
-  A different reason updates the body line only;
+- the item is already `Blocked` and its `Waiting on:` line says the same thing;
 - the Issue is closed but Project automation has not yet moved it to `Done`.
   Wait and re-read once before reporting. Do not set `Done` by hand to cover a
   lag.
@@ -181,16 +180,19 @@ satisfied, report it as such, and change nothing:
   are not evidence about a requirement.
 - Set `Blocked` only when the user says the work waits on something that has
   no Issue in this repository: a vendor, a customer, legal, a team elsewhere.
-  Entering `Blocked` is one transaction: write a line under
-  `## Additional context` (or the repository template's equivalent section)
-  saying what it waits on, then set the field, then read both back. If the user
-  gives no reason, ask; do not guess one. An Issue blocked by another Issue is
-  never `Blocked`: create the `blocked-by` relation and leave it in `Todo`
-  (rule 9).
+  The record is one line beginning `Waiting on:` under `## Additional context`
+  (or the repository template's equivalent section); the audit's
+  `state.blocked-without-record` looks for exactly that prefix. Entering
+  `Blocked` writes that line before it sets the field, as the transaction in
+  `references/gh-recipes.md` shows. If the user gives no reason, ask; do not
+  guess one. An Issue blocked by another Issue is never `Blocked`: create the
+  `blocked-by` relation and leave it in `Todo` (rule 9).
 - Leaving `Blocked` is the user's call: `move` to `Todo` when the block lifted
   and nobody has started, or to `In Progress` with an Assignee when they are
-  continuing. The same transaction marks the body line as lifted, or removes it
-  when the user asks.
+  continuing. The same transaction rewrites the line's prefix from
+  `Waiting on:` to `Lifted:`, keeping the text, or removes the line when the
+  user asks. Either way no `Waiting on:` line survives on an item that is not
+  `Blocked`, so the audit does not report it as an undeclared dependency.
 
 ## 8. Splitting
 

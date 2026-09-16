@@ -125,8 +125,9 @@ Say so plainly and say what it costs:
 
 - `Item added to project` off: new items arrive with no `Status`, so they are
   invisible on a board grouped by `Status`, and the audit reports them.
-- `Item closed` off: closed Issues stay in `Todo` or `In Progress`, which is
-  `state.closed-not-done` on every audit and makes the board's counts wrong.
+- `Item closed` off: closed Issues stay in `Todo`, `In Progress`, or `Blocked`,
+  which is `state.closed-not-done` on every audit and makes the board's counts
+  wrong.
 
 Never compensate for a disabled workflow by setting the field by hand across the
 Project. That hides the real problem and has to be repeated forever. Report it,

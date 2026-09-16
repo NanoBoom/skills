@@ -157,8 +157,8 @@ This is the skill's core check. Every Issue in scope lands in exactly one row.
 |---|---|---|
 | Open | Todo | normal |
 | Open | In Progress | normal |
-| Open | Blocked, body records what it waits on | normal |
-| Open | Blocked, body records nothing | `state.blocked-without-record` |
+| Open | Blocked, body has a `Waiting on:` line | normal |
+| Open | Blocked, body has no `Waiting on:` line | `state.blocked-without-record` |
 | Closed | Done | normal |
 | Closed | Todo, In Progress, or Blocked | `state.closed-not-done` |
 | Open | Done | `state.open-in-done` |

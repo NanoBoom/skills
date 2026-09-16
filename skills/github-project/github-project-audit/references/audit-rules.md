@@ -112,6 +112,7 @@ Every rule below reads these field names and no others:
 | `itemType` | `Issue`, `PullRequest`, `DraftIssue` | the item-list projection |
 | `state` | `OPEN` or `CLOSED` | the Issue list |
 | `stateReason` | string, may be empty | the Issue list |
+| `body` | string, HTML comments stripped as in *Body section detection* | the Issue list |
 | `status` | **plain string**, or null when unset | the item-list projection |
 | `priority` | plain string, or null when unset | the item-list projection |
 
@@ -270,9 +271,10 @@ the section counts as present.
 - **Severity**: warning
 - **Detects**: the body says the work waits on something, no `blocked-by`
   relation exists, and the item is not `Blocked`. A `Blocked` item has declared
-  its wait through the status; the opposite gap, `Blocked` with no such line in
-  the body, is `state.blocked-without-record`, so the two rules never fire on
-  the same Issue.
+  its wait through the status; the opposite gap, `Blocked` with no
+  `Waiting on:` line in the body, is `state.blocked-without-record`, so the two
+  rules never fire on the same Issue. A line beginning `Lifted:` is a block that
+  has ended and matches nothing here.
 - **Find it**: body text matching `blocked by`, `depends on`, `waiting on`,
   `after #`, `once #`, or `needs <team>`, with an empty `blocked_by` list on
   the dependencies endpoint, and `status` not `Blocked`.
@@ -416,9 +418,9 @@ the section counts as present.
 - **Find it**: `status` is not one of `Todo`, `In Progress`, `Blocked`, `Done`.
   A wrong value fires on any item type, because a column the model does not
   know corrupts the board whatever sits in it. The unset half is limited to
-  `itemType == "Issue"`: its action sets `Todo` or `Done` from the Issue's own state, which a draft does
-  not have. Rule 7 is the only owner of this set; there is no configurable
-  alternative.
+  `itemType == "Issue"`: its action sets `Todo` or `Done` from the Issue's own
+  state, which a draft does not have. Rule 7 is the only owner of this set;
+  there is no configurable alternative.
 - **Expected**: rule 7 holds exactly, and every item carries one of the four.
 - **Action**: for a wrong value, move the item to a valid status. For an unset
   value, set
@@ -454,7 +456,8 @@ the section counts as present.
   `Blocked`, so the board over-counts open work.
 - **Find it**: in the joined record, `state` is `CLOSED` and `status` is `Todo`,
   `In Progress`, or `Blocked`. An unset `status` is `meta.nonstandard-status`,
-  not this rule, which is what keeps every Issue on exactly one row of the status matrix.
+  not this rule, which is what keeps every Issue on exactly one row of the
+  status matrix.
 - **Expected**: closed Issues are `Done`.
 - **Action**: re-read once first, since the `Item closed` automation is not
   instant. If it persists across several Issues, the workflow is off and the
@@ -483,14 +486,16 @@ the section counts as present.
   block lifts.
 - **Find it**: `itemType` is `Issue`, `state` is `OPEN`, `status` is `Blocked`,
   and the body, with HTML comments stripped as in *Body section detection*,
-  has no text matching the `issue.undeclared-dependency` pattern list:
-  `blocked by`, `depends on`, `waiting on`, `after #`, `once #`, or
-  `needs <team>`.
+  has no line beginning `Waiting on:`, compared case-insensitively. That prefix
+  is the record `github-project-manage` writes when it moves an item to
+  `Blocked`, and it is the only thing this rule looks for: prose that happens
+  to mention a dependency is `issue.undeclared-dependency`'s concern, not a
+  `Blocked` record.
 - **Expected**: rule 9 holds: every `Blocked` item says in its body what it
   waits on.
-- **Action**: write the reason into the body. If the Issue is in fact blocked
-  by another Issue, create the `blocked-by` relation and move the item back to
-  `Todo` instead.
+- **Action**: write a `Waiting on:` line into the body. If the body says the
+  Issue is blocked by another Issue, such as `Blocked by: #101`, create the
+  `blocked-by` relation and move the item back to `Todo` instead (rule 9).
 - **Owner**: `github-project-manage`
 - **Auto-fixable**: no. Only a person knows what the Issue waits on. A batch of
   these usually means items were dragged into `Blocked` in the web UI.
@@ -565,10 +570,11 @@ the section counts as present.
 - **Severity**: error
 - **Detects**: a `Status` or `Priority` field whose option set is not exactly
   the required one, including case and spacing. `In progress` is drift.
-- **Find it**: compare the option names to `Todo`, `In Progress`, `Done` and to
-  `P0`, `P1`, `P2`. These literals are rules 7 and 8, and they are the same
-  literals `meta.nonstandard-status` and `meta.nonstandard-priority` compare
-  against, so the three rules can never disagree about the same field.
+- **Find it**: compare the option names to `Todo`, `In Progress`, `Blocked`,
+  `Done` and to `P0`, `P1`, `P2`. These literals are rules 7 and 8, and they
+  are the same literals `meta.nonstandard-status` and
+  `meta.nonstandard-priority` compare against, so the three rules can never
+  disagree about the same field.
 - **Expected**: rules 7 and 8 hold exactly, with no extra options.
 - **Action**: correct the option set. Report which items would lose a value,
   because replacing the option list removes anything omitted, and renaming an

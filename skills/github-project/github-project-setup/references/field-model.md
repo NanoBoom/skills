@@ -19,16 +19,17 @@ with the option list mutation below, rather than creating the field.
 `Blocked` carries one kind of block only: the Issue waits on something that has
 no Issue in this repository, such as a vendor, a customer, legal, or a team in
 another organization. A person sets it, and the entry condition is a line in the
-body that says what the Issue waits on. A block by another Issue is not
-`Blocked`: it is a `blocked-by` relation, and the Issue stays in `Todo`, where
-the relation and its blocker's state can be checked. This keeps the `Todo` count
-honest rather than corrupting it: `Todo` holds only work that can be picked up
-now, and the audit's `state.blocked-without-record` checks that every `Blocked`
-item has its reason in the Issue.
+body beginning `Waiting on:` that says what the Issue waits on. A block by
+another Issue is not `Blocked`: it is a `blocked-by` relation, and the Issue
+stays in `Todo`, where the relation and its blocker's state can be checked.
+This keeps the `Todo` count honest rather than corrupting it: `Todo` holds only
+work that can be picked up now, and the audit's `state.blocked-without-record`
+checks that every `Blocked` item has its reason in the Issue.
 
-The order in the table is the recommended order for a new or repaired field.
-Drift is compared on the set of names, not on their order, so a Project that
-appended `Blocked` after `Done` is not drift.
+The order in the table is the order for a field created from nothing. A
+repaired field appends `Blocked` after its existing options instead, for the
+reason given under *Repairing option drift*. Drift is compared on the set of
+names, not on their order, so both orders pass.
 
 ### Semantics
 
@@ -114,8 +115,8 @@ cat <<'JSON' | gh api graphql --input -
     "options": [
       {"name": "Todo", "color": "GRAY", "description": ""},
       {"name": "In Progress", "color": "YELLOW", "description": ""},
-      {"name": "Blocked", "color": "RED", "description": ""},
-      {"name": "Done", "color": "GREEN", "description": ""}
+      {"name": "Done", "color": "GREEN", "description": ""},
+      {"name": "Blocked", "color": "RED", "description": ""}
     ]
   }
 }
@@ -137,8 +138,13 @@ Three things to know before running it:
    user decide.
 
 A Project set up before `Blocked` existed is exactly this mutation's case: send
-all four options, and the three existing ones keep their items because they
-keep their names.
+the existing options exactly as they are, in their current order, and append
+`Blocked` last, as the payload above does. Appending changes no existing
+option's name or position, so no item can change value whichever way GitHub
+matches the new list to the old one. Putting `Blocked` third, to match the
+table, would reorder `Done`, which this skill's boundaries forbid without
+saying so first. Read the options back from the mutation's response and
+confirm the three old names are still present before reporting the repair.
 
 If the mutation is rejected or the schema differs on the host, stop and report
 the web UI path: the Project page, then the field header menu, then `Edit

@@ -163,7 +163,7 @@ of the same fact.
 
 An Issue waiting on something that has no Issue here, such as a vendor, a
 customer, or a team in another organization, is `Blocked`. There is no relation
-to create, so the body line saying what it waits on is the record, and `move`
+to create, so a body line beginning `Waiting on:` is the record, and `move`
 sets the status together with that line. Section 7 of `SKILL.md` has the rules
 and `references/gh-recipes.md` has the transaction.
 

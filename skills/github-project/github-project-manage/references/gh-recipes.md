@@ -242,12 +242,13 @@ that is already an item, and the result is a duplicate item.
 then the field, then read both back:
 
 ```bash
-# 1. Read the current body and append the reason under Additional context,
+# 1. Read the current body and append the record under Additional context,
 #    following the refine and edit recipe above. --body-file replaces the whole
 #    body, so every section the user did not ask to change must survive.
 gh issue view <number> --repo <owner>/<repo> --json body --jq .body > /tmp/issue-body.md
-# Edit /tmp/issue-body.md: add a line such as
+# Edit /tmp/issue-body.md: add one line beginning "Waiting on:", such as
 #   Waiting on: vendor API key, expected 2026-10-01
+# The prefix is what the audit checks for; the rest is for the reader.
 gh issue edit <number> --repo <owner>/<repo> --body-file /tmp/issue-body.md
 
 # 2. Set the field with the item id found above.
@@ -260,8 +261,9 @@ gh issue view <number> --repo <owner>/<repo> --json body,projectItems \
 ```
 
 If the user gave no reason, stop before step 1 and ask. Leaving `Blocked` runs
-the same three steps with the body line marked as lifted and the target option
-id for `Todo` or `In Progress`.
+the same three steps with the line's prefix rewritten from `Waiting on:` to
+`Lifted:` (or the line removed, when the user asks) and the target option id
+for `Todo` or `In Progress`.
 
 ## query
 

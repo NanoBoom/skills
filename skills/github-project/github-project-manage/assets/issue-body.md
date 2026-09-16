@@ -31,7 +31,9 @@ The near misses a reader would otherwise assume are included.
 ## Additional context
 
 Links, prior discussion, screenshots, affected users, constraints, and known
-dependencies. Write "None" rather than deleting the heading.
+dependencies. A block by another Issue is "Blocked by: #101". A block with no
+Issue to relate to is one line beginning "Waiting on:", which is what moves
+the Project item to Blocked. Write "None" rather than deleting the heading.
 ```
 
 Replace the guidance text with real content. Leaving it in place is the same as
