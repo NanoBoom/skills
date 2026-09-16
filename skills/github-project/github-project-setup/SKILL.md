@@ -124,10 +124,10 @@ write only where the step reports a gap the user agreed to fix.
    1. Its five sections and their order must match the fallback body that
    `github-project-manage` uses; their wording is in `language`, and that skill
    and the audit read the wording from this file rather than from the asset.
-   When `language` is `en`, write the asset as it is. Otherwise translate the
-   values of `name` and `about`, the headings, the HTML comments, and the
-   reason after `Waiting on:`, in place, and leave everything else exactly as
-   the asset has it. A template that already exists is the repository's own,
+   When `language` is `en` or not set, write the asset as it is. Otherwise
+   translate the values of `name` and `about`, the headings, the HTML
+   comments, and the reason after `Waiting on:`, in place, and leave
+   everything else exactly as the asset has it. A template that already exists is the repository's own,
    whatever language it is in, and `github-project-manage` takes its headings
    from it either way. When it is visibly in another language than `language`,
    say so under Notes: new Issues take their headings from the template and
