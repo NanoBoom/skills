@@ -261,9 +261,8 @@ gh issue view <number> --repo <owner>/<repo> --json body,projectItems \
 ```
 
 If the user gave no reason, stop before step 1 and ask. Leaving `Blocked` runs
-the same three steps with the line's prefix rewritten from `Waiting on:` to
-`Lifted:` (or the line removed, when the user asks) and the target option id
-for `Todo` or `In Progress`.
+the same three steps with the `Waiting on:` line removed and the target option
+id for `Todo` or `In Progress`.
 
 ## query
 

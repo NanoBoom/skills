@@ -273,8 +273,7 @@ the section counts as present.
   relation exists, and the item is not `Blocked`. A `Blocked` item has declared
   its wait through the status; the opposite gap, `Blocked` with no
   `Waiting on:` line in the body, is `state.blocked-without-record`, so the two
-  rules never fire on the same Issue. A line beginning `Lifted:` is a block that
-  has ended and matches nothing here.
+  rules never fire on the same Issue.
 - **Find it**: body text matching `blocked by`, `depends on`, `waiting on`,
   `after #`, `once #`, or `needs <team>`, with an empty `blocked_by` list on
   the dependencies endpoint, and `status` not `Blocked`.

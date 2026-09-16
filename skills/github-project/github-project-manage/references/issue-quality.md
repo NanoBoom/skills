@@ -122,4 +122,5 @@ When the body says the work waits on something, needs another team, or follows
 another change, and no `blocked-by` relation exists, that is
 `issue.undeclared-dependency`. When what it waits on is another Issue, create
 the relation rather than leaving the dependency as prose. When it has no Issue
-to relate to, keep the prose and move the item to `Blocked`.
+to relate to, keep the prose and move the item to `Blocked` with the `move`
+transaction, which writes the `Waiting on:` line.

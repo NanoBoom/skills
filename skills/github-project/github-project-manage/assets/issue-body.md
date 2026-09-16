@@ -31,9 +31,10 @@ The near misses a reader would otherwise assume are included.
 ## Additional context
 
 Links, prior discussion, screenshots, affected users, constraints, and known
-dependencies. A block by another Issue is "Blocked by: #101". A block with no
-Issue to relate to is one line beginning "Waiting on:", which is what moves
-the Project item to Blocked. Write "None" rather than deleting the heading.
+dependencies. Note a dependency on another Issue here as well as in the
+relation. A block with no Issue to relate to is one line beginning
+"Waiting on:", which is what moves the Project item to Blocked. Write "None"
+rather than deleting the heading.
 ```
 
 Replace the guidance text with real content. Leaving it in place is the same as

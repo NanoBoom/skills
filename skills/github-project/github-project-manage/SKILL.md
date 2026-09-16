@@ -189,10 +189,10 @@ satisfied, report it as such, and change nothing:
   `blocked-by` relation and leave it in `Todo` (rule 9).
 - Leaving `Blocked` is the user's call: `move` to `Todo` when the block lifted
   and nobody has started, or to `In Progress` with an Assignee when they are
-  continuing. The same transaction rewrites the line's prefix from
-  `Waiting on:` to `Lifted:`, keeping the text, or removes the line when the
-  user asks. Either way no `Waiting on:` line survives on an item that is not
-  `Blocked`, so the audit does not report it as an undeclared dependency.
+  continuing. The same transaction removes the `Waiting on:` line, so no such
+  line survives on an item that is not `Blocked` and the audit has nothing to
+  report as an undeclared dependency. The Issue's edit history keeps what it
+  waited on.
 
 ## 8. Splitting
 
@@ -231,8 +231,8 @@ unsupported relation as created.
   criteria against the Issue first.
 - On `reopen`, restore the `Status` the user asks for, defaulting to `Todo`, and
   state in the output that the Project field was restored by hand rather than by
-  automation. Restoring to `Blocked` needs the body to still say, or to be
-  updated to say, what the Issue waits on.
+  automation. Restoring to `Blocked` runs the same transaction as `move` to
+  `Blocked`: add or update the `Waiting on:` line first, then set the field.
 
 ## 11. Bulk changes
 
