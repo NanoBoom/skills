@@ -40,7 +40,7 @@ repository makes obvious:
 Yours to decide. Markdown or HTML, grouped or ranked, dense or spacious — whatever makes the
 answer to *"what do I take next"* obvious in a glance.
 
-Then **offer it rather than pasting it**: write the file to this project's `~/.prp/<key>/` store
+Then **offer it rather than pasting it**: write the file to this project's `.prp/` store
 and print a link the operator can open. If a `helm-canvas` skill is available, follow it.
 
 ## Report your choices

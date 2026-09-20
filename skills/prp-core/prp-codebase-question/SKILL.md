@@ -204,16 +204,17 @@ basename $(git rev-parse --show-toplevel)
 
 ```bash
 # --- PRP store resolver (canonical; keep byte-identical across skills) ---
-# Adopt the store that already records this root; mint a key only when none does.
+# The store is `.prp/` in the project root, so it travels with the checkout and
+# the operator can find it without resolving a derived key.
+# --git-common-dir resolves a linked worktree to its main checkout, so every
+# worktree of a project shares one store.
+# The store ignores itself (`*` covers its own .gitignore), so no artifact ever
+# reaches `git status` or gets swept into a commit. Set PRP_DIR to relocate it.
 _gd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 case "$_gd" in */.git) _root="${_gd%/.git}" ;; "") _root="$PWD" ;; *) _root="$_gd" ;; esac
 _root="$(cd "$_root" && pwd -P)"
-_name="$(basename "$_root" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-*//;s/-*$//')"
-_home="${PRP_HOME:-$HOME/.prp}"
-_hit="$(grep -lsF "\"path\": \"$_root\"" "$_home"/*/project.json 2>/dev/null | head -1)"
-PRP_DIR="${_hit%/project.json}"
-[ -n "$PRP_DIR" ] || PRP_DIR="$_home/${_name:-project}-$(printf %s "$_root" | git hash-object --stdin | cut -c1-8)"
-mkdir -p "$PRP_DIR"; [ -f "$PRP_DIR/project.json" ] || printf '{"path": "%s", "name": "%s"}\n' "$_root" "${_name:-project}" > "$PRP_DIR/project.json"
+PRP_DIR="${PRP_DIR:-$_root/.prp}"
+mkdir -p "$PRP_DIR"; [ -f "$PRP_DIR/.gitignore" ] || printf '*\n' > "$PRP_DIR/.gitignore"
 mkdir -p "$PRP_DIR/research"
 ```
 

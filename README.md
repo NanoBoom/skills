@@ -153,7 +153,7 @@ direction is a scope question for the operator, not a defect the author can fix 
 
 The plugin ships one Stop hook, `hooks/prp-research-team-stop.sh`, which
 validates `prp-research-team` output. The skill writes its plan path to a
-sentinel file in `~/.prp/<project-key>/state/prp-research-team.state`; on Stop,
+sentinel file in `.prp/state/prp-research-team.state`; on Stop,
 the hook checks the plan for the six required sections and, if any are missing,
 blocks completion once with the list of what is absent. It cleans up the sentinel
 on success, ignores stale sentinels (older than 2 hours), and never blocks twice
@@ -167,9 +167,9 @@ in a row. Note: the hook ships only with the plugin. If you copy the skill into
 ```
 /prp-core:prp-prd "user authentication system"
     ↓  creates a PRD with an Implementation Phases table
-/prp-core:prp-plan ~/.prp/<project-key>/prds/user-auth.prd.md
+/prp-core:prp-plan .prp/prds/user-auth.prd.md
     ↓  auto-selects the next pending phase, creates a plan
-/prp-core:prp-implement ~/.prp/<project-key>/plans/user-auth-phase-1.plan.md
+/prp-core:prp-implement .prp/plans/user-auth-phase-1.plan.md
     ↓  executes, validates, commits, opens the PR, and links delivery to the PRD
 repeat /prp-core:prp-plan for the next phase
 ```
@@ -178,7 +178,7 @@ repeat /prp-core:prp-plan for the next phase
 
 ```
 /prp-core:prp-plan "add pagination to the API"
-/prp-core:prp-implement ~/.prp/<project-key>/plans/add-pagination.plan.md
+/prp-core:prp-implement .prp/plans/add-pagination.plan.md
 ```
 
 ### Hands-off: the autonomous loop
@@ -352,11 +352,11 @@ so edits in the tree take effect immediately.
 
 ## Artifacts
 
-Artifacts and runtime state are written outside the repository to the target project's shared PRP store:
+Artifacts and runtime state are written to the target project's PRP store, `.prp/` in the project root:
 
 ```
-~/.prp/<project-key>/
-├── project.json       # canonical project path and name
+<project-root>/.prp/
+├── .gitignore         # holds `*`, so the store ignores itself and its contents
 ├── prds/              # product requirement documents
 ├── plans/             # implementation plans
 ├── research/          # codebase research
@@ -368,9 +368,11 @@ Artifacts and runtime state are written outside the repository to the target pro
 └── state/             # loop state, logs, and hook sentinels
 ```
 
-`<project-key>` is `<slug>-<hash8>`, where the slug comes from the canonical main-checkout basename and `hash8` is the first eight characters of Git's blob hash of that checkout path. This makes every linked worktree resolve to the same store. Set `PRP_HOME` to override the default `~/.prp` root.
+The root is resolved with `git rev-parse --git-common-dir`, so a linked worktree resolves to its main checkout and every worktree of a project shares one store. Outside a repository the store lands in the current directory.
 
-If a repository moves, its path-derived key changes. Move the old store to the newly derived key and update `path` in `project.json`; PRP never deletes or auto-adopts the old store.
+The store is never committed: it creates a `.gitignore` containing `*`, which ignores its contents and the file itself, so nothing appears in `git status` and no `git add -A` can sweep it in. The store moves with the repository and needs no re-keying, but a deleted checkout takes its artifacts with it. Copy `.prp/` out first if you want them to survive.
+
+Set `PRP_DIR` to put the store somewhere else, for example back under `$HOME` on a machine where the repository must stay pristine.
 
 ## PRP methodology
 

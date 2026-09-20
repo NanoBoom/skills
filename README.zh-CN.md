@@ -148,7 +148,7 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 
 插件带一个 Stop hook，`hooks/prp-research-team-stop.sh`，用于校验
 `prp-research-team` 的输出。该 skill 会把它的计划路径写进
-`~/.prp/<project-key>/state/prp-research-team.state` 这个哨兵文件；Stop 时 hook
+`.prp/state/prp-research-team.state` 这个哨兵文件；Stop 时 hook
 检查该计划是否包含六个必需章节，若有缺失，就带着缺失清单阻断一次完成。成功后它
 会清理哨兵文件，忽略过期哨兵（超过 2 小时），并且绝不连续阻断两次。注意：这个
 hook 只随插件分发。如果你只是把 skill 直接复制进 `.claude/skills/`，这项校验不
@@ -161,9 +161,9 @@ hook 只随插件分发。如果你只是把 skill 直接复制进 `.claude/skil
 ```
 /prp-core:prp-prd "user authentication system"
     ↓  生成带实施阶段表的 PRD
-/prp-core:prp-plan ~/.prp/<project-key>/prds/user-auth.prd.md
+/prp-core:prp-plan .prp/prds/user-auth.prd.md
     ↓  自动选中下一个待办阶段，生成计划
-/prp-core:prp-implement ~/.prp/<project-key>/plans/user-auth-phase-1.plan.md
+/prp-core:prp-implement .prp/plans/user-auth-phase-1.plan.md
     ↓  执行、校验、提交、开 PR，并把交付结果回链到 PRD
 对下一个阶段重复 /prp-core:prp-plan
 ```
@@ -172,7 +172,7 @@ hook 只随插件分发。如果你只是把 skill 直接复制进 `.claude/skil
 
 ```
 /prp-core:prp-plan "add pagination to the API"
-/prp-core:prp-implement ~/.prp/<project-key>/plans/add-pagination.plan.md
+/prp-core:prp-implement .prp/plans/add-pagination.plan.md
 ```
 
 ### 放手不管：自主循环
@@ -342,11 +342,11 @@ skill。
 
 ## 产物
 
-产物和运行期状态写在仓库之外，落在目标项目共享的 PRP store 里：
+产物和运行期状态写在目标项目的 PRP store 里，也就是项目根目录下的 `.prp/`：
 
 ```
-~/.prp/<project-key>/
-├── project.json       # 项目的规范路径与名称
+<project-root>/.prp/
+├── .gitignore         # 内容是 `*`，store 连同它自己一起被忽略
 ├── prds/              # 产品需求文档
 ├── plans/             # 实施计划
 ├── research/          # 代码库研究
@@ -358,12 +358,14 @@ skill。
 └── state/             # 循环状态、日志和 hook 哨兵文件
 ```
 
-`<project-key>` 的形式是 `<slug>-<hash8>`，其中 slug 取自规范主检出的目录名，
-`hash8` 是 Git 对该检出路径算出的 blob hash 的前八位。这样每个 linked worktree
-都会解析到同一个 store。设置 `PRP_HOME` 可覆盖默认的 `~/.prp` 根目录。
+根目录由 `git rev-parse --git-common-dir` 解析，所以 linked worktree 会解析到它的
+主检出，一个项目的所有 worktree 共用同一个 store。不在仓库里时，store 落在当前目录。
 
-如果仓库被移动，它由路径推导出的 key 也会变。把旧 store 移到新推导出的 key 下，
-并更新 `project.json` 里的 `path`；PRP 从不删除、也不会自动接管旧 store。
+store 永远不会被提交：它会写一个内容为 `*` 的 `.gitignore`，同时忽略自身和里面的
+内容，因此 `git status` 看不到它，`git add -A` 也扫不进去。store 跟着仓库一起移动，
+不需要重新算 key；但删掉检出也会带走产物，想保留就先把 `.prp/` 拷出去。
+
+设置 `PRP_DIR` 可以把 store 放到别处，例如在必须保持仓库干净的机器上放回 `$HOME` 下。
 
 ## PRP 方法论
 
