@@ -13,7 +13,7 @@
       "name": "prp-core",
       "description": "Complete PRP workflow automation as agent skills - prd, plan, issue delivery, implement, debug, commit, pr, review, codebase research, a detached build loop, and a skill-authoring meta-skill, with specialized agents",
       "source": "./",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "category": "development",
       "license": "MIT",
       "strict": true,

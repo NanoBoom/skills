@@ -13,7 +13,7 @@ Pipeline:
 Design:
 - Headless: each stage is one CLI call in a fresh session — `claude -p "<prompt>"` by
   default, or `codex exec "<prompt>"` with --cli codex (the CLI choice persists in state).
-- State lives in ~/.prp/<key>/state/prp-loop.state.json (resumable: re-run with --resume).
+- State lives in <project-root>/.prp/state/prp-loop.state.json (resumable: re-run with --resume).
 - Fully autonomous (permission/sandbox bypass flags per CLI).
 - Self-contained: this script owns both loops itself and detects "green" from each
   stage's `VALIDATION: GREEN` sentinel (parsed from the clean result text) and/or an
@@ -56,23 +56,14 @@ def _project_root() -> Path:
     return Path.cwd()
 
 
-def _registered_store(home: Path, root: Path) -> Path | None:
-    """The store that already records this root, whatever key minted it.
-
-    Keeps one store per project when an older or foreign resolver minted the key
-    a different way; the hash only names a store nothing has claimed yet.
-    """
-    for registration in sorted(home.glob("*/project.json")):
-        try:
-            if json.loads(registration.read_text()).get("path") == str(root):
-                return registration.parent
-        except (json.JSONDecodeError, OSError):
-            continue
-    return None
-
-
 def _prp_dir() -> Path:
-    """Resolve the per-project PRP store shared by the main checkout and worktrees."""
+    """Resolve the per-project PRP store shared by the main checkout and worktrees.
+
+    Mirrors the canonical shell resolver the skills carry: the store is `.prp/` in
+    the project root, --git-common-dir puts every linked worktree on the main
+    checkout's store, and the store ignores itself so the loop's state never shows
+    up in `git status`. PRP_DIR relocates it.
+    """
     common = subprocess.run(
         ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
         capture_output=True,
@@ -86,30 +77,12 @@ def _prp_dir() -> Path:
     else:
         root = Path.cwd().resolve()
 
-    name = re.sub(r"[^a-z0-9]+", "-", root.name.lower()).strip("-") or "project"
-    hashed = subprocess.run(
-        ["git", "hash-object", "--stdin"],
-        input=str(root),
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()[:8]
-    home = Path(os.environ.get("PRP_HOME", Path.home() / ".prp"))
-    prp_dir = _registered_store(home, root) or home / f"{name}-{hashed}"
+    override = os.environ.get("PRP_DIR")
+    prp_dir = Path(override).expanduser().resolve() if override else root / ".prp"
     prp_dir.mkdir(parents=True, exist_ok=True)
-    registration = prp_dir / "project.json"
-    if registration.exists():
-        try:
-            registered_path = json.loads(registration.read_text()).get("path")
-        except (json.JSONDecodeError, OSError) as exc:
-            sys.exit(f"invalid PRP project registration at {registration}: {exc}")
-        if registered_path != str(root):
-            sys.exit(
-                f"PRP project-key collision: {registration} belongs to {registered_path!r}, "
-                f"not {str(root)!r}"
-            )
-    else:
-        registration.write_text(json.dumps({"path": str(root), "name": name}) + "\n")
+    ignore = prp_dir / ".gitignore"
+    if not ignore.exists():
+        ignore.write_text("*\n")
     return prp_dir
 
 
@@ -126,7 +99,8 @@ STAGE_TIMEOUT = 3600  # seconds per agent stage
 CLI = "claude"  # which headless CLI drives the stages; set in main(), persisted in state
 # The loop's own artifacts — never commit these, even when the target repo doesn't gitignore them.
 LOOP_ARTIFACTS = (
-    ".claude/prp-loop.state.json*",  # state file + its atomic-write temp
+    ".prp/",  # the PRP store: belt and braces, it also gitignores itself
+    ".claude/prp-loop.state.json*",  # legacy state file + its atomic-write temp
     ".claude/prp-loop.run.log",
 )
 
