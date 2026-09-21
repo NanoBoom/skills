@@ -47,7 +47,15 @@ Wait until all selected review agents have finished and the review coordinator h
 
 ## 4. Disposition findings and re-review
 
-Read the complete report in this implementation context and disposition every finding. Fix valid Critical or Important findings. Prefer fixing a valid Suggestion now when the correction is narrow, low-risk, aligned, and cheaper than another delivery cycle. Use `NOT A FINDING` with decisive evidence when it is false or already satisfied. Use `TRACKED FOLLOW-UP` only for clearly valuable, distinct work with a verified issue link. Use `DECLINED` for speculative defense-in-depth, overengineering, preference, or unclear or undesirable direction; record why and do not create an issue. Never leave a bare deferred state.
+Read the complete report in this implementation context and give every finding a terminal
+disposition, never a bare deferred state:
+
+- **Fix** valid Critical or Important findings. Prefer fixing a valid Suggestion now when the
+  correction is narrow, low-risk, aligned, and cheaper than another delivery cycle.
+- **`NOT A FINDING`** with decisive evidence when it is false or already satisfied.
+- **`TRACKED FOLLOW-UP`** only for clearly valuable, distinct work, with a verified issue link.
+- **`DECLINED`** for speculative defense-in-depth, overengineering, preference, or an unclear or
+  undesirable direction. Record why; do not create an issue.
 
 Batch every accepted correction and evidence-backed disposition into one coherent pass, then invoke `/prp-implement` in review-correction mode in this same context. Start one fresh `/prp-review --verify-corrections` agent with the previous reviewed head, current PR head, complete canonical report, and dispositions. Never start another review when neither the head nor disposition evidence changed. Do not wait for or check CI between rounds; CI clears once, at the end of the workstream, on the final head.
 

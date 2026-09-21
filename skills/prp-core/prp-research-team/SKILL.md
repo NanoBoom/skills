@@ -268,12 +268,8 @@ Identify shared standards across all researchers:
 
 ```bash
 # --- PRP store resolver (canonical; keep byte-identical across skills) ---
-# The store is `.prp/` in the project root, so it travels with the checkout and
-# the operator can find it without resolving a derived key.
-# --git-common-dir resolves a linked worktree to its main checkout, so every
-# worktree of a project shares one store.
-# The store ignores itself (`*` covers its own .gitignore), so no artifact ever
-# reaches `git status` or gets swept into a commit. Set PRP_DIR to relocate it.
+# Store is `.prp/` in the project root. --git-common-dir makes every worktree of
+# a project share one store; the store gitignores itself. PRP_DIR relocates it.
 _gd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 case "$_gd" in */.git) _root="${_gd%/.git}" ;; "") _root="$PWD" ;; *) _root="$_gd" ;; esac
 _root="$(cd "$_root" && pwd -P)"

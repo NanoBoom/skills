@@ -1,6 +1,21 @@
 # Adaptive Implementation Plan Template
 
-Keep every **required** section. Include a **conditional** section only when it adds decision or implementation value. Remove all instructional comments and unused placeholders from the saved plan.
+Keep every **required** section. Include a **conditional** section only when it adds decision or
+implementation value. Remove instructional comments and unused placeholders from the saved plan.
+
+**Each fact appears once.** This plan is re-read in full on every implementation and correction pass
+and published verbatim to the source issue, so a sentence repeated across sections is paid for many
+times. The sections below are already scoped to avoid overlap:
+
+- `Recommendation → Evidence` carries the `file:line` that decided the *design*. Tasks carry the
+  `file:line` that will be *changed*. A file needed for both is cited in Evidence and referenced by
+  name in the task, not re-described.
+- `Mandatory reading` lists only what the implementer must read before editing and that no task
+  already names.
+- Task-level `Validation` proves one task. The `Validation` table lists only the integrated gates no
+  task already runs.
+- `Acceptance` states the completed behavioral contract once. Tasks and validation refer to `AC<n>`
+  instead of restating it.
 
 ---
 
@@ -14,40 +29,38 @@ Keep every **required** section. Include a **conditional** section only when it 
 
 ## Outcome
 
-**Problem:** {Specific problem and who experiences it.}
-
-**Affected user:** {User, operator, team, or system experiencing the problem.}
+**Problem:** {The specific problem and who experiences it: user, operator, team, or system.}
 
 **User outcome:** {What becomes possible or reliably different.}
 
 **Invariant:** {Observable property every acceptable solution must preserve.}
 
-**Success signal:** {Quantitative or qualitative evidence that the delivered change improved the outcome; or `Not measured separately — <why acceptance fully captures this internal outcome>`. Do not invent a metric.}
-
-**Approach:** {Concise description of the chosen solution.}
+**Success signal:** {Quantitative or qualitative evidence that the delivered change improved the
+outcome; or `Not measured separately — <why acceptance fully captures this internal outcome>`. Do not
+invent a metric.}
 
 ## Recommendation
 
-{Why this is the simplest coherent approach supported by the codebase. Name the existing primitives,
-foundational data shape and owner when relevant, unnecessary machinery it removes or avoids, and the
-evidence that justifies any new state, scaffold, abstraction, or cross-layer signal.}
+{The chosen solution and why it is the simplest coherent shape the codebase supports. Name the
+existing primitives it reuses, the machinery it removes or avoids, and the evidence that justifies
+any new state, scaffold, abstraction, or cross-layer signal.}
 
 ### Evidence
 
-- `{file:line}` — {decisive existing behavior, primitive, or convention}
-- {Decision-relevant issue comment, linked issue, PR, or specification when the plan came from a tracker}
+- `{file:line}` — {the existing behavior, primitive, or convention that decided the design}
+- {Decision-relevant issue comment, linked issue, PR, or specification, when the plan came from a tracker}
 - {Official source and version, when external behavior matters}
 - {Spike verdict and absolute report path, when a spike was run}
 
 ### Alternatives considered
 
-<!-- CONDITIONAL: include only meaningful alternatives. -->
+<!-- CONDITIONAL: only alternatives a reviewer would otherwise propose. -->
 
 - **{Alternative}:** {Why it loses against the invariant, evidence, or ownership cost.}
 
 ## Root Cause
 
-<!-- CONDITIONAL: include for a bug, regression, error, stack trace, or unexplained current behavior. -->
+<!-- CONDITIONAL: for a bug, regression, error, stack trace, or unexplained current behavior. -->
 
 - **Observed failure:** {Reproduced symptom and decisive observation.}
 - **Causal chain:** {Shortest evidence-backed chain from symptom to cause.}
@@ -57,37 +70,25 @@ evidence that justifies any new state, scaffold, abstraction, or cross-layer sig
 
 ## Visuals
 
-<!-- CONDITIONAL: use a UX diagram for interaction changes and/or an architecture diagram for structural changes. Follow references/visuals.md. Omit this section when prose is clearer. -->
+<!-- CONDITIONAL: a UX diagram for interaction changes, an architecture diagram for structural ones.
+     Follow references/visuals.md. Omit when prose is clearer. -->
 
-## Implementation Context
+## Mandatory reading
 
-### Mandatory reading
+<!-- Only what the implementer must understand before editing and that no task below already names. -->
 
 | File | Why it matters |
 |---|---|
-| `{path:lines}` | {Primitive, contract, integration point, or test precedent the implementer must understand} |
+| `{path:lines}` | {The primitive, contract, or test precedent it carries} |
 
-### Existing patterns and primitives
-
-- **{Pattern or primitive}:** `{path:lines}` — {How it applies; include a short actual snippet only when the shape cannot be conveyed precisely in prose.}
-
-### Integration points
-
-- `{path:line}` — {Current role and how the change connects.}
-
-## Scope
-
-### In scope
-
-- {Agreed outcome}
-
-### Not building
+## Not building
 
 - {Explicit exclusion and why it is outside the invariant or belongs later}
 
 ## Delivery Considerations
 
-<!-- CONDITIONAL: include only when existing users, behavior, or stored data may be affected. Keep only applicable rows. -->
+<!-- CONDITIONAL: only when existing users, behavior, or stored data may be affected. Keep only
+     applicable rows; each row names work a task owns, not a concern to think about later. -->
 
 | Concern | Decision and owned work |
 |---|---|
@@ -107,35 +108,33 @@ evidence that justifies any new state, scaffold, abstraction, or cross-layer sig
 - `{path:line}` — {CREATE / UPDATE and ownership rationale}
 
 **Implementation**
-- {Concrete behavior and existing primitive or precedent to use.}
+- {Concrete behavior, and the existing primitive or precedent to use.}
 - {Boundary, failure behavior, migration, or compatibility detail when relevant.}
 
 **Tests**
-- {Behavior to prove at the appropriate test surface.}
+- {Behavior to prove, at the appropriate test surface.}
 
 **Validation**
 - `{focused command}` — {Expected observable result.}
 
 ## Acceptance
 
-State the completed behavioral contract once. Use stable identifiers so tasks and validation can refer to it without duplicating checklists.
-
 1. **AC1 — {Observable outcome}:** {Given/when/then behavior or externally verifiable result.}
 2. **AC2 — {Preserved invariant}:** {Behavior that must remain true across the change.}
 
 ## Validation
 
-List the repository's authoritative integrated gates in execution order.
+<!-- Integrated gates only, in execution order. Omit anything a task's own Validation already runs. -->
 
 | Gate | Command or procedure | Proves |
 |---|---|---|
-| Focused behavior | `{command}` | {AC1 and task-level behavior} |
-| Project gate | `{command}` | {AC2, types, lint, suite, build, or equivalent} |
-| Runtime / manual | {Concrete procedure, when automation cannot prove it} | {Acceptance criterion not otherwise observable} |
+| {Project gate} | `{command}` | {AC<n>, types, lint, suite, build, or equivalent} |
+| {Runtime / manual} | {Concrete procedure, when automation cannot prove it} | {AC<n> not otherwise observable} |
 
 ## Risks and Decisions
 
-<!-- CONDITIONAL: omit when none remain. Minor decisions only; resolve architectural forks with the user before finalizing. -->
+<!-- CONDITIONAL: omit when none remain. Minor decisions only; resolve architectural forks with the
+     user before finalizing. -->
 
 | Decision or risk | Recommendation | Evidence / mitigation | Consequence if different |
 |---|---|---|---|
@@ -150,4 +149,5 @@ List the repository's authoritative integrated gates in execution order.
 
 ## Agent Notes
 
-<!-- CONDITIONAL free-form canvas for useful material that does not fit above. Do not use it to hide blockers, scope, or decisions the user needs to see. -->
+<!-- CONDITIONAL free-form canvas for material that fits nowhere above. Not a place to hide blockers,
+     scope, or decisions the user needs to see. -->

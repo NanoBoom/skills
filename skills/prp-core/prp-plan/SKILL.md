@@ -6,148 +6,130 @@ argument-hint: <feature description | path/to/prd.md> | update-references <plan-
 
 # PRP Plan
 
-Produce a plan a human can scan and an implementation agent can execute without rediscovering the design. Identify the invariant, find the existing primitives, and choose the smallest solution supported by evidence.
+Produce a plan a human can scan and an implementation agent can execute without rediscovering the
+design. Identify the invariant, find the existing primitives, and choose the smallest solution the
+evidence supports.
 
-Plan only. Do not implement, commit, or open a PR. A spike is allowed only to settle an architectural hinge; its code remains throwaway under the `prp-spike` contract.
+Plan only. Do not implement, commit, or open a PR. A spike is allowed only to settle an architectural
+hinge; its code stays throwaway under the `prp-spike` contract.
 
-**Input**: $ARGUMENTS (if absent, use the conversation).
+**Input**: $ARGUMENTS (if absent, use the conversation.)
 
 ## Mode
 
-- A request to link two existing plans routes to `workflows/update-references.md` and stops.
-- `publish <existing .plan.md>` publishes or refreshes that plan on its recorded source issue, updates `Plan Publication`, verifies the shared comment, and stops. Do not redesign the plan unless the user asks to revise it.
-- A bug report, stack trace, regression, error, or unexplained current behavior adds root-cause analysis before solution design.
-- Everything else creates an implementation plan.
+- Linking two existing plans → `workflows/update-references.md`, then stop.
+- `publish <existing .plan.md>` → publish or refresh that plan on its recorded source issue, update
+  `Plan Publication`, verify the shared comment, stop. Do not redesign it unless asked to revise it.
+- A bug, stack trace, regression, or unexplained current behavior → establish the cause before
+  designing the fix (step 3).
+- Everything else → an implementation plan.
 
 ## 1. Resolve the request
 
-Accept a PRD path, issue reference or URL, another document, free-form text, or conversation context.
+Accept a PRD path, an issue reference or URL, another document, free-form text, or the conversation.
 
-For a PRD:
+**From a PRD**: select the first pending phase whose dependencies are complete, preserve its problem,
+user, hypothesis, scope, and success signal, plan only that phase, and tell the user which one you
+picked.
 
-1. Read it and select the first pending phase whose dependencies are complete.
-2. Preserve its problem, user, hypothesis, scope, and success signal.
-3. Note other independently actionable phases, but plan only the selected phase.
-4. Tell the user which phase was selected.
+**From a tracker issue** (GitHub, Jira, Linear, or whatever access the environment already has;
+this skill does not configure a client): the body is the starting point, not the brief. Follow the
+comments, linked issues, blocking relations, duplicates, PRs, specs, and attachments that can still
+change scope, intent, constraints, or decisions, including earlier published PRP plans and the
+corrections after them, and stop once more material stops changing the plan. Separate current
+decisions from superseded discussion, note unresolved disagreements, and keep the required outcome
+separate from any implementation the issue merely suggests. Curate; do not dump the tracker graph. If
+decision-relevant context cannot be retrieved, say what is missing and ask; never infer it.
 
-For an issue from GitHub, Jira, Linear, or another tracker:
+From any input, establish the problem and user outcome, who is affected, the observable invariant
+that must hold, the success signal that would show the outcome improved, the genuinely fixed
+constraints, and whether a proposed implementation is required or only suggested.
 
-1. Retrieve the issue through whatever access is already configured in the environment. The skill does not prescribe or configure a tracker client.
-2. Treat the body as the starting point, not the complete brief. Read the relevant comment history—including earlier published PRP plans and corrections after them—and follow linked issues, parent/child or blocking relationships, duplicates, PRs, specifications, and attachments that can change scope, intent, constraints, or current decisions.
-3. Reconcile that context: distinguish current decisions from superseded discussion, note unresolved disagreements, and stop following links once additional material no longer affects the plan. Curate; do not dump the tracker graph.
-4. Preserve the source issue in the plan while separating its required outcome from any suggested implementation.
-5. If the issue, comments, or decision-relevant links cannot be retrieved, state what context is missing and ask the user to provide it or configure access. Never infer missing tracker content.
-
-For every input, establish:
-
-- the problem and user outcome;
-- the affected user, operator, or system;
-- the observable invariant that must hold;
-- the success signal that would show the outcome improved after delivery;
-- constraints that are genuinely fixed;
-- assumptions inherited from the request;
-- whether a proposed implementation is required or merely suggested.
-
-Do not invent personas, business value, or vanity metrics. If the affected user, problem, desired outcome, or meaningful success signal is materially uncertain, stop and recommend clarifying the product intent before architecture turns assumptions into code. Ask the user only when ambiguity changes the product contract or would produce materially different plans.
+Do not invent personas, business value, or vanity metrics. When the affected user, problem, outcome,
+or any meaningful success signal is materially uncertain, stop and settle product intent before
+architecture turns the assumption into code. Otherwise ask only when the ambiguity would produce
+materially different plans.
 
 ## 2. Gather codebase evidence
 
-Read repository guidance and discover the actual project structure. Do not assume `src/`, a framework, or a validation stack.
+Read repository guidance and discover the actual project structure. Do not assume `src/`, a
+framework, or a validation stack.
 
-Read the project's optional sidecars when they exist: `direction.md` for product direction and scope, and `engineering.md` for the standard work is checked against, the engineering-manager sidecar. They live anywhere in the repository: follow the path repository guidance names, or find them by name with `git ls-files`. Absence is normal; never create them. Product direction bounds what this plan may propose, and a proposal that contradicts it needs the user's decision before it becomes tasks.
+Read the project's sidecars when they exist: `direction.md` for product direction and scope,
+`engineering.md` for the standard work is checked against. They live wherever repository guidance
+says, or find them by name with `git ls-files`. Absence is normal; never create them. Product
+direction bounds what this plan may propose, and a proposal that contradicts it needs the user's
+decision before it becomes tasks.
 
-For a non-trivial code change, read `references/agent-prompts.md`, then launch these agents in parallel when capacity permits, or sequentially when it does not. Every listed role remains required:
+For a non-trivial code change, launch these in parallel, adapting the prompts in
+`references/agent-prompts.md`:
 
-- `prp-core:codebase-explorer` to locate relevant files, analogous behavior, tests, configuration, and existing primitives.
-- `prp-core:codebase-analyst` to trace the current control flow, data flow, state changes, contracts, and observable behavior.
-- For broken current behavior, `prp-core:root-cause-analyzer` to reproduce the symptom, falsify competing explanations, and prove the causal chain and smallest fix boundary.
+- `prp-core:codebase-explorer` — where the concern lives: files, analogous behavior, tests,
+  configuration, existing primitives, and the repository's real validation commands.
+- `prp-core:codebase-analyst` — how the current behavior actually works: control flow, data flow,
+  state ownership, contracts, observable effects.
+- `prp-core:root-cause-analyzer` — for broken behavior only; see step 3.
 
-For a small documentation, configuration, or narrowly localized change, use only the agent or direct inspection needed to remove uncertainty. The planner owns synthesis and must inspect the decisive files itself.
+Subagent dispatch needs the installed `prp-core` plugin; without it, gather the same evidence
+inline. For a small documentation, configuration, or narrowly localized change, skip the agents and
+inspect directly. Either way the planner owns synthesis and reads the decisive files itself.
 
-Collect only relevant evidence:
-
-- precise `file:line` references;
-- existing primitives and extension points;
-- the closest useful precedent, including meaningful variations;
-- authoritative project validation commands;
-- conventions the change should preserve;
-- awkward seams or missing primitives the requested feature would otherwise work around.
-
-Do not preserve a known poor local convention merely because it exists. Fit the architecture while applying repository and global quality guidance.
+Keep the evidence that decides something: precise `file:line` references, the primitives and
+extension points available, the closest useful precedent and where it varies, the authoritative
+validation commands, the conventions worth preserving, and the awkward seams or missing primitives
+this feature would otherwise work around. A known-poor local convention is not a reason to repeat it.
 
 ## 3. Establish the cause for broken behavior
 
-For a bug, error, regression, stack trace, or unexplained behavior, do not plan from the report's assumed cause. Give the root-cause agent the original symptom and tracker context without a preferred fix, then consume its evidence alongside the explorer and analyst results.
+For a bug, error, regression, stack trace, or unexplained behavior, do not plan from the report's
+assumed cause. Give the root-cause agent the original symptom and tracker context without a preferred
+fix, and consume its evidence alongside the explorer and analyst results.
 
-Require a reproducible observation when reasonably possible, a causal chain, rejected alternatives, the smallest responsible fix boundary, and a regression check. If the diagnosis is conditional or unresolved, surface the missing evidence and recommendation at the design gate. Do not disguise an unproven cause as an implementation task.
+The plan needs a reproducible observation where one is reasonably possible, the causal chain, the
+rejected alternatives, the smallest responsible fix boundary, and a regression check. If the
+diagnosis stays conditional, surface the missing evidence at the design gate rather than disguising
+an unproven cause as an implementation task.
 
-The planner does not create issues, edit issue bodies, or publish diagnosis through `/prp-debug`. Its only tracker write is publishing and verifying its completed plan under step 8.
+The planner does not create issues, edit issue bodies, or publish diagnosis through `/prp-debug`. Its
+only tracker write is step 7.
 
-For requests that do not assert broken current behavior, skip this step.
+## 4. Choose the smallest supported design
 
-## 4. Reason from invariants and primitives
+Challenge the first plausible design. Which existing primitive comes closest to the required
+outcome, and can configuration, composition, or a small extension get there? Name the assumption
+that forces new state, lifecycle, abstraction, or subsystem, and justify it by the invariant it
+protects rather than by future need. Get the data shape and its owner right before the logic around
+them. Prefer the smallest valuable vertical slice: it must deliver or directly unlock the user
+outcome, not just leave behind an elegant primitive.
 
-Read `references/planning-craft.md` and challenge the first plausible design before committing to it.
+Read `references/planning-craft.md` when the design is contested, a primitive looks missing, or
+ownership of state is unclear.
 
-Apply its foundation and laziness tests to the candidate design. Establish the data shape and owner,
-the existing or missing primitive, where each decision belongs, what coordination the design avoids,
-and what can be deleted. Justify any shared state, scaffold, new abstraction, or cross-layer signal by
-the invariant it protects rather than by hypothetical future need.
+Research or spike only when it can change the plan. Use `prp-core:web-researcher` for a narrow
+question about current documentation, dependency versions, platform behavior, or security guidance
+that decides the design, preferring primary sources. Delegate `/prp-spike` to a separate agent, using
+the prompt in `references/planning-craft.md` → **Decide when to spike**, when an uncertain,
+falsifiable claim materially changes the architecture; wait for its verdict, then consume it. Never
+build the spike in this context or copy spike code into the plan as production code.
 
-Answer:
+## 5. Hold the design gate
 
-1. What observable outcome is actually required?
-2. Which existing primitive comes closest to satisfying it?
-3. Can configuration, composition, prompting, or a small extension solve it?
-4. What assumption forces new state, lifecycle, abstraction, or subsystem?
-5. Can that assumption be tested cheaply?
-6. What machinery disappears if the simpler mechanism works?
-7. Which data shape and owner make the required behavior simplest?
-8. If state is shared, what happens when another actor changes it concurrently?
-9. If this requirement had existed from day one, would this still be the design?
+Before writing the plan, state the recommended approach and its evidence. Stop and ask the user when
+a missing primitive should probably be built first, when product intent or the success signal is too
+uncertain to justify implementation, when the evidence contradicts the requested implementation, when
+the simpler solution changes the intended product contract, or when an unresolved decision would
+produce a substantially different plan.
 
-Prefer the smallest valuable vertical slice: it must deliver or directly unlock the user outcome, not merely create an elegant technical primitive. Reuse proven primitives, keep ownership clear, and avoid speculative flexibility. Simplicity is not fewer plan details; it is fewer moving parts in the proposed system.
+Explain the invariant, the discovery, the recommendation, and what the alternatives cost. Do not bury
+a load-bearing decision in the artifact. A minor uncertainty may stay in the plan only with a
+recommendation, its evidence, and the consequence of choosing differently.
 
-## 5. Research or spike only when it can change the plan
-
-External research is conditional. Use `prp-core:web-researcher` when current documentation, dependency versions, platform behavior, security guidance, or an unfamiliar tool affects the design. Ask a narrow question tied to the architectural decision and prefer primary sources.
-
-Delegate `/prp-spike` to a separate agent before finalizing when an uncertain, falsifiable claim materially changes the architecture, especially when:
-
-- a new subsystem exists only because external behavior is uncertain;
-- a recent or unfamiliar tool may already expose the needed primitive;
-- a configuration switch, prompt, or composition technique might remove substantial code;
-- competing approaches have dramatically different complexity;
-- a small behavioral experiment can prove the real integration-point behavior.
-
-The planner chooses the question. Use the exact agent-delegation prompt under `references/planning-craft.md` → **Decide when to spike**, wait for that agent, then consume its verdict and evidence. Never build the spike in the planner context or copy spike code into the plan as production code.
-
-## 6. Hold the design gate
-
-Before writing the plan, state the recommended approach and its evidence. Stop and ask the user when:
-
-- a missing primitive should probably be built first;
-- product intent or the success signal remains too uncertain to justify implementation;
-- evidence contradicts the requested implementation;
-- the simpler solution materially changes the intended product contract;
-- an unresolved decision would create substantially different plans.
-
-Explain the invariant, discovery, recommendation, and cost of the alternatives. Do not bury a load-bearing decision in the artifact.
-
-Minor uncertainties may remain in the plan only with a recommendation, supporting evidence, and the consequence of choosing differently.
-
-## 7. Write the adaptive plan
-
-Resolve the canonical store and save the plan to `$PRP_DIR/plans/<kebab-case-name>.plan.md`:
+## 6. Write the plan
 
 ```bash
 # --- PRP store resolver (canonical; keep byte-identical across skills) ---
-# The store is `.prp/` in the project root, so it travels with the checkout and
-# the operator can find it without resolving a derived key.
-# --git-common-dir resolves a linked worktree to its main checkout, so every
-# worktree of a project shares one store.
-# The store ignores itself (`*` covers its own .gitignore), so no artifact ever
-# reaches `git status` or gets swept into a commit. Set PRP_DIR to relocate it.
+# Store is `.prp/` in the project root. --git-common-dir makes every worktree of
+# a project share one store; the store gitignores itself. PRP_DIR relocates it.
 _gd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
 case "$_gd" in */.git) _root="${_gd%/.git}" ;; "") _root="$PWD" ;; *) _root="$_gd" ;; esac
 _root="$(cd "$_root" && pwd -P)"
@@ -156,53 +138,62 @@ mkdir -p "$PRP_DIR"; [ -f "$PRP_DIR/.gitignore" ] || printf '*\n' > "$PRP_DIR/.g
 mkdir -p "$PRP_DIR/plans"
 ```
 
-Read `templates/plan-template.md` and `references/task-format.md`. Keep its required human-scannable spine; assign a stable plan ID, reusing it when revising the same plan, set the source issue metadata when planning from a tracker, and include conditional sections only when they add information. The source metadata is the store lookup key; do not add a separate plan index that can drift.
+Read `templates/plan-template.md` and `references/task-format.md`, then save to
+`$PRP_DIR/plans/<kebab-case-name>.plan.md`. Keep the template's required spine, assign a stable plan
+ID and reuse it when revising the same plan, and set the source metadata when planning from a PRD or
+tracker; that metadata is how downstream skills find the plan, so there is no separate index to
+drift. Include conditional sections only when they add information.
 
-Write in plain, concrete language. Use the repository's exact terms, remove filler and formulaic phrasing, and keep one name for each concept throughout the plan.
+Write in plain, concrete language using the repository's exact terms, one name per concept. State
+each fact once: this plan is re-read in full on every implementation and correction pass and
+published verbatim to the source issue, so a sentence repeated across sections is paid for many
+times. The template scopes the sections that would otherwise overlap; follow those scopes.
 
-Use `references/visuals.md` when either applies:
+Add a diagram from `references/visuals.md` when it makes the change easier to verify: before/after
+for an interaction or user-flow change, architecture for a change in structure, ownership, state, or
+data flow.
 
-- interaction or user-flow change → before/after UX diagram;
-- architecture, ownership, state, or data-flow change → architecture diagram.
+When existing users, behavior, or stored data can be affected, add one compact Delivery
+Considerations section covering only what applies.
 
-When existing users, behavior, or stored data can be affected, include one compact Delivery Considerations section covering only what applies: discoverability, compatibility, rollout, migration, observability, reversibility, documentation, or communication.
+Tasks describe outcomes in dependency order, each naming its files and integration points, the
+applicable precedent, the implementation detail, the tests, and its focused validation. Acceptance
+criteria state the observable completed behavior once; the validation gates prove them with commands
+verified in this repository. Every requested outcome must be covered and every validation owned. If
+something cannot be completed in this implementation, resolve the scope with the user before
+presenting the plan as ready.
 
-Tasks describe outcomes in dependency order. Each task identifies its files and integration points, applicable precedent, implementation detail, tests, and focused validation. Acceptance criteria state the observable completed behavior once, and the validation gates prove those criteria. Use commands verified from this repository, not a generic language catalog.
+## 7. Publish, verify, hand off
 
-The plan must make incomplete work unacceptable: every requested outcome is covered, and every validation has an owner. If something cannot be completed in this implementation, resolve the scope with the user before presenting the plan as ready.
+If the input came from an issue, or `publish` mode supplied an issue-derived plan, publish the
+complete rendered plan to that issue. Prefix the body with `<!-- prp-plan-id: <plan-id> -->`, record
+its stable comment URL as `Plan Publication` in the local plan, and read the issue back to verify the
+complete final plan is there. Refreshing the same plan ID updates that marked comment rather than
+adding a duplicate. If publication or verification fails, keep the local plan and report the blocker;
+do not claim the shared handoff is complete.
 
-## 8. Verify and hand off
+Before reporting, confirm the plan holds up:
 
-If the input came from an issue—or publish mode supplied an issue-derived plan—publish the complete rendered plan to that issue through the configured tracker access. Prefix the body with `<!-- prp-plan-id: <plan-id> -->`, capture its stable comment URL, record that URL as `Plan Publication` in the local plan, and update the published comment to the same final plan. Read the issue back and verify the complete final plan exists at that URL. Reuse and update the existing marked comment when refreshing the same plan ID rather than creating duplicates. If publication or verification fails, preserve the local plan but report the publication blocker; do not claim the shared handoff is complete.
+- the invariant, recommendation, and evidence are explicit, with real paths and line numbers, and
+  implementation acceptance is distinct from the product success signal;
+- a bug-fix plan states the proven causal chain, fix boundary, and regression proof, or surfaces the
+  evidence still missing;
+- tasks cover the agreed scope, execute top to bottom, and own every applicable delivery concern;
+- validation commands exist in this project and prove the integrated outcome, not just syntax;
+- open decisions carry recommendations and none silently changes the architecture;
+- no placeholders, generic examples, confidence scores, or coverage targets remain.
 
-Before reporting completion, verify:
+If the input came from a PRD, invoke `/prp-prd-update planned` with the PRD path, selected phase, and
+absolute plan path, then verify the phase is `in-progress` and links to the plan.
 
-- the invariant and recommended solution are explicit;
-- implementation acceptance is distinct from the product success signal;
-- the approach is supported by codebase evidence and any relevant spike or research;
-- bug-fix plans state the proven causal chain, fix boundary, and regression proof, or clearly surface the evidence still missing;
-- tasks cover the full agreed scope and can execute top-to-bottom;
-- acceptance criteria cover the observable completed outcome without duplicating a completion checklist;
-- decisive references use real paths and line numbers;
-- tests prove behavior rather than implementation trivia;
-- validation commands exist in the project and cover the integrated outcome;
-- diagrams are present when they materially improve human review;
-- applicable rollout, compatibility, migration, observability, and reversibility concerns are owned by tasks or explicitly resolved;
-- open decisions carry recommendations and none silently change the architecture;
-- issue-derived plans account for relevant comments and linked tracker context rather than relying on the body alone;
-- issue-derived plans are published in full, verified on the source issue, and record that publication URL;
-- no placeholders, generic examples, confidence scores, or arbitrary coverage targets remain.
-
-If the input came from a PRD, invoke `/prp-prd-update planned` with the PRD path, selected phase, and absolute plan path. Verify that the phase is `in-progress` and links to the plan.
-
-Read `templates/report-format.md` and report the recommendation, absolute plan path, source PRD or issue when applicable, evidence or spike used, visuals included, and the next step.
+Report using `templates/report-format.md`.
 
 ## Resources
 
 - `references/planning-craft.md` — invariant, primitive, simplicity, spike, and decision-gate reasoning
-- `references/agent-prompts.md` — adaptive prompts for the planner's evidence-gathering agents
+- `references/agent-prompts.md` — prompts for the planner's evidence-gathering agents
 - `references/task-format.md` — implementation task content and sizing
 - `references/visuals.md` — conditional UX and architecture diagrams
-- `templates/plan-template.md` — adaptive plan artifact
+- `templates/plan-template.md` — the plan artifact
 - `templates/report-format.md` — concise user handoff
 - `workflows/update-references.md` — bidirectional plan linking mode
