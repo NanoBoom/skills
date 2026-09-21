@@ -20,15 +20,21 @@ Keep each commit focused on one coherent outcome. Split unrelated outcomes, but 
 
 ## Message
 
-Write a concise, human-readable subject that explains the meaningful outcome. Commit subjects often become changelog entries or PR titles, so they must make sense without reading the diff.
+Write the subject in the imperative mood, as an instruction to the codebase: `add`, `remove`, `rename`, `collapse`, never `added`, `adds`, or a sentence describing the new state. Read it as completing "this commit will ...". The imperative is mandatory even when the repository's history mixes styles.
 
-Use plain language and the repository's exact terms. Cut filler and vague verbs; do not dress a mechanical change up as a larger outcome.
+Keep it short. One line, no trailing period, under 72 characters including any type and scope. State the meaningful outcome and stop; commit subjects often become changelog entries or PR titles, so they must make sense without reading the diff.
+
+Use plain language and the repository's exact terms. Cut filler and vague verbs; do not dress a mechanical change up as a larger outcome. Name a concrete object, not a category of work.
+
+Add a body only when the reason is not obvious from the subject and the diff. When you write one, keep it to a few lines that say why, not what.
 
 Respect enforced repository syntax such as required types or scopes. Treat Git history as evidence of valid structure, not as the writing-quality standard. Never add AI attribution, generated-by text, robot emoji, or `Co-Authored-By: Claude`.
 
-**Bad:** `refactor(prp-pr): update skill instructions`
+**Bad:** `refactor(prp-pr): update skill instructions` (vague verb, no outcome)
 
-**Good:** `refactor(prp-pr): PR creation now uses one focused workflow`
+**Bad:** `refactor(prp-pr): PR creation now uses one focused workflow` (describes a state, not imperative)
+
+**Good:** `refactor(prp-pr): collapse PR creation into one workflow`
 
 ## Commit and verify
 
