@@ -352,10 +352,10 @@ so edits in the tree take effect immediately.
 
 ## Artifacts
 
-Artifacts and runtime state are written to the target project's PRP store, `.prp/` in the project root:
+Artifacts and runtime state are written to the target project's PRP store, `.prp/` in the checkout root:
 
 ```
-<project-root>/.prp/
+<checkout-root>/.prp/
 ├── .gitignore         # holds `*`, so the store ignores itself and its contents
 ├── prds/              # product requirement documents
 ├── plans/             # implementation plans
@@ -368,11 +368,11 @@ Artifacts and runtime state are written to the target project's PRP store, `.prp
 └── state/             # loop state, logs, and hook sentinels
 ```
 
-The root is resolved with `git rev-parse --git-common-dir`, so a linked worktree resolves to its main checkout and every worktree of a project shares one store. Outside a repository the store lands in the current directory.
+The root is resolved with `git rev-parse --show-toplevel`, so every worktree gets its own store next to the code it is working on. Outside a repository the store lands in the current directory. A worktree therefore does not see the main checkout's PRDs, plans, or reports; copy the ones you need into it, or point both at one store with `PRP_DIR`.
 
-The store is never committed: it creates a `.gitignore` containing `*`, which ignores its contents and the file itself, so nothing appears in `git status` and no `git add -A` can sweep it in. The store moves with the repository and needs no re-keying, but a deleted checkout takes its artifacts with it. Copy `.prp/` out first if you want them to survive.
+The store is never committed: it creates a `.gitignore` containing `*`, which ignores its contents and the file itself, so nothing appears in `git status` and no `git add -A` can sweep it in. The store moves with the repository and needs no re-keying, but a deleted checkout takes its artifacts with it, and removing a worktree is the common way that happens. Copy `.prp/` out first if you want them to survive.
 
-Set `PRP_DIR` to put the store somewhere else, for example back under `$HOME` on a machine where the repository must stay pristine.
+Set `PRP_DIR` to put the store somewhere else: back under `$HOME` on a machine where the repository must stay pristine, or at the main checkout's `.prp/` so several worktrees share one store. `/prp-orchestrate` does exactly that, pinning every workstream owner to the orchestrator's store so its artifacts outlive the worktree.
 
 ## PRP methodology
 

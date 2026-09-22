@@ -6,7 +6,7 @@ argument-hint: "<feature description> [--base <branch>] [--max-cycles N] [--vali
 
 # PRP Loop — autonomous cyclic pipeline
 
-Launch the orchestrator that drives `plan → implement (commit + PR) → review` and loops `review → fix` until the PR review is clean (or limits are hit). It runs headless `claude -p` once per stage and tracks progress in `.prp/state/prp-loop.state.json` under the project root.
+Launch the orchestrator that drives `plan → implement (commit + PR) → review` and loops `review → fix` until the PR review is clean (or limits are hit). It runs headless `claude -p` once per stage and tracks progress in `.prp/state/prp-loop.state.json` under the checkout root.
 
 ## Run it
 
@@ -48,7 +48,7 @@ uv run ${CLAUDE_PLUGIN_ROOT}/skills/prp-core/prp-loop/scripts/prp_loop.py "$ARGU
 
 - Fully autonomous (`--dangerously-skip-permissions`). Operates only on the feature branch — it refuses to PR from `main`/`master`/`development`/the base branch.
 - Halts with state preserved on: implement/fix not green after the iteration limit, review still dirty after `--max-cycles`, a fix pass with no new commit (no progress), failed push, or any stage error.
-- Inspect or resume via `.prp/state/prp-loop.state.json` under the project root.
+- Inspect or resume via `.prp/state/prp-loop.state.json` under the checkout root, which is the worktree the loop was started in rather than the main checkout.
 
 ## Notes
 

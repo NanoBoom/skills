@@ -342,10 +342,10 @@ skill。
 
 ## 产物
 
-产物和运行期状态写在目标项目的 PRP store 里，也就是项目根目录下的 `.prp/`：
+产物和运行期状态写在目标项目的 PRP store 里，也就是当前检出根目录下的 `.prp/`：
 
 ```
-<project-root>/.prp/
+<checkout-root>/.prp/
 ├── .gitignore         # 内容是 `*`，store 连同它自己一起被忽略
 ├── prds/              # 产品需求文档
 ├── plans/             # 实施计划
@@ -358,14 +358,18 @@ skill。
 └── state/             # 循环状态、日志和 hook 哨兵文件
 ```
 
-根目录由 `git rev-parse --git-common-dir` 解析，所以 linked worktree 会解析到它的
-主检出，一个项目的所有 worktree 共用同一个 store。不在仓库里时，store 落在当前目录。
+根目录由 `git rev-parse --show-toplevel` 解析，所以每个 worktree 都有自己的 store，
+就放在它正在改的代码旁边。不在仓库里时，store 落在当前目录。也就是说 worktree 看不到
+主检出里的 PRD、计划和报告：需要就拷进来，或者用 `PRP_DIR` 把两边指到同一个 store。
 
 store 永远不会被提交：它会写一个内容为 `*` 的 `.gitignore`，同时忽略自身和里面的
 内容，因此 `git status` 看不到它，`git add -A` 也扫不进去。store 跟着仓库一起移动，
-不需要重新算 key；但删掉检出也会带走产物，想保留就先把 `.prp/` 拷出去。
+不需要重新算 key；但删掉检出也会带走产物，删 worktree 正是最常见的情形，想保留就先把
+`.prp/` 拷出去。
 
-设置 `PRP_DIR` 可以把 store 放到别处，例如在必须保持仓库干净的机器上放回 `$HOME` 下。
+设置 `PRP_DIR` 可以把 store 放到别处：在必须保持仓库干净的机器上放回 `$HOME` 下，或者
+指向主检出的 `.prp/`，让多个 worktree 共用一个 store。`/prp-orchestrate` 就是这么做的，
+它把每个工作流 owner 都钉在编排者的 store 上，产物因此比 worktree 活得久。
 
 ## PRP 方法论
 
