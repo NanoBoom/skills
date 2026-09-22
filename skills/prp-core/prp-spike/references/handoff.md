@@ -4,11 +4,11 @@ Two questions at the end of a spike: where the evidence lives so someone else ca
 
 ## Making the evidence followable
 
-`$PRP_DIR` is **local-only** — it sits in the project root but is gitignored, so it never leaves the machine. A path into it is unfollowable by anyone but the operator — so the moment a verdict travels to a shared surface, a store pointer stops being evidence and becomes a claim.
+`$PRP_DIR` is **local-only** — it sits in the checkout root but is gitignored, so it never leaves the machine. A path into it is unfollowable by anyone but the operator — so the moment a verdict travels to a shared surface, a store pointer stops being evidence and becomes a claim.
 
 | Route | When | Cost |
 |---|---|---|
-| **Store** — `$PRP_DIR/spikes/<slug>/` | Always. The operator's permanent copy, shared across the project's worktrees, survives the discarded spike worktree | none |
+| **Store** — `$PRP_DIR/spikes/<slug>/` | Always. The operator's permanent copy in the launching checkout, survives the discarded spike worktree | none |
 | **Gist** | The verdict is going somewhere other people read — an issue, a ticket, a review thread | one command, nothing enters the repo |
 | **Branch** | The spike code is substantial and worth re-running in-repo | a branch to maintain; only if it carries a commit |
 

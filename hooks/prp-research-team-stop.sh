@@ -25,8 +25,8 @@ HOOK_INPUT=$(cat)
 # `|| true` is load-bearing: outside a git repo `git rev-parse` exits 128, and
 # under `set -e` that aborted the whole hook on its first line — surfacing as a
 # Stop-hook failure with no stderr, on every stop, in any non-repo directory.
-_gd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
-case "$_gd" in */.git) _root="${_gd%/.git}" ;; "") _root="$PWD" ;; *) _root="$_gd" ;; esac
+_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+[ -n "$_root" ] || _root="$PWD"
 _root="$(cd "$_root" 2>/dev/null && pwd -P)" || exit 0
 [ -n "$_root" ] || exit 0
 PRP_DIR="${PRP_DIR:-$_root/.prp}"

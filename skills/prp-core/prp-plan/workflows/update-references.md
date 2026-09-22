@@ -23,4 +23,4 @@ Wire a bidirectional relationship between two existing plan files so either arti
 
 Historical plans may contain `## Lifecycle (append-only)` with `Back refs` and `Forward refs`. Preserve that structure when editing one of those plans; do not rewrite the whole artifact merely to add a link. A current plan may therefore link reciprocally with a legacy plan using each plan's native section.
 
-Use expanded absolute store paths so links resolve from every worktree sharing the project store.
+Use expanded absolute store paths. Each checkout has its own store, so a relative link silently resolves to a different file, or to none, in another worktree.

@@ -1,6 +1,6 @@
 # Orchestration run: {run-id}
 
-> Maintained by the orchestrator for the run's lifetime. Stored in the project's shared PRP store and
+> Maintained by the orchestrator for the run's lifetime. Stored in the orchestrator's own PRP store and
 > never committed by a workstream. The tables are current state and are rewritten as the run changes;
 > the Event log is append-only history. Resume with `/prp-orchestrate --resume`.
 

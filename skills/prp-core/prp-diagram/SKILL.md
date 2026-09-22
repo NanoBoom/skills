@@ -14,10 +14,10 @@ One agent, one pass, no subagents. Read the plan, produce the diagrams a human w
 
 ```bash
 # --- PRP store resolver (canonical; keep byte-identical across skills) ---
-# Store is `.prp/` in the project root. --git-common-dir makes every worktree of
-# a project share one store; the store gitignores itself. PRP_DIR relocates it.
-_gd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
-case "$_gd" in */.git) _root="${_gd%/.git}" ;; "") _root="$PWD" ;; *) _root="$_gd" ;; esac
+# Store is `.prp/` in the checkout root. --show-toplevel gives every worktree its
+# own store; the store gitignores itself. PRP_DIR relocates it.
+_root="$(git rev-parse --show-toplevel 2>/dev/null)"
+[ -n "$_root" ] || _root="$PWD"
 _root="$(cd "$_root" && pwd -P)"
 PRP_DIR="${PRP_DIR:-$_root/.prp}"
 mkdir -p "$PRP_DIR"; [ -f "$PRP_DIR/.gitignore" ] || printf '*\n' > "$PRP_DIR/.gitignore"

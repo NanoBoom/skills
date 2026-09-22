@@ -59,8 +59,17 @@ preserve the operator's meaning:
 - For PR-producing work, add `Open the PR against <base>.`
 - Omit both instructions when they do not apply.
 
+Always pin the store. A PRP skill resolves `.prp/` from the checkout it runs in, so an owner in a
+worktree would write its plan and report into a directory that teardown deletes, where nothing the
+orchestrator verifies can be read. Pass the orchestrator's absolute `$PRP_DIR` and require it on every
+command, because shell state does not survive between an agent's tool calls:
+
 ```text
 Run the <prp-skill> skill against <source or complete natural-language request>.
+
+Write every PRP artifact to <absolute $PRP_DIR>, not to the store your checkout would resolve. Prefix
+each command that resolves or writes the store with `PRP_DIR=<absolute $PRP_DIR>`; an exported value
+does not persist between commands.
 
 Relevant operator context:
 <context or decisions that materially affect this workstream; omit when none>
@@ -106,7 +115,9 @@ each command's own exit code. Do not treat a piped pager's exit code as the gate
 remain evidence but do not block the terminal state.
 
 Use the three-dot merge-base diff for PR scope. Verify every plan, implementation report, review report,
-publication URL, or spike report promised by the engine under the shared PRP store.
+publication URL, or spike report promised by the engine under the orchestrator's `$PRP_DIR`. An artifact
+missing there but present under `<worktree>/.prp/` means the owner ignored the pin: copy it into
+`$PRP_DIR` before teardown, and restate the pin when resuming that owner.
 
 ## Clean up after each merge
 

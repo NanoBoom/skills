@@ -14,14 +14,19 @@ workstream outcomes, plus `$PRP_DIR/orchestration/<run-id>.md` as the durable ru
 
 ```bash
 # --- PRP store resolver (canonical; keep byte-identical across skills) ---
-# Store is `.prp/` in the project root. --git-common-dir makes every worktree of
-# a project share one store; the store gitignores itself. PRP_DIR relocates it.
-_gd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
-case "$_gd" in */.git) _root="${_gd%/.git}" ;; "") _root="$PWD" ;; *) _root="$_gd" ;; esac
+# Store is `.prp/` in the checkout root. --show-toplevel gives every worktree its
+# own store; the store gitignores itself. PRP_DIR relocates it.
+_root="$(git rev-parse --show-toplevel 2>/dev/null)"
+[ -n "$_root" ] || _root="$PWD"
 _root="$(cd "$_root" && pwd -P)"
 PRP_DIR="${PRP_DIR:-$_root/.prp}"
 mkdir -p "$PRP_DIR"; [ -f "$PRP_DIR/.gitignore" ] || printf '*\n' > "$PRP_DIR/.gitignore"
 ```
+
+This store belongs to the orchestrator's own checkout. Every worktree resolves its own, so an owner
+left to resolve for itself writes its plan and report into a checkout that teardown deletes. Pin every
+owner to this store by passing the absolute `$PRP_DIR` in its prompt, as `references/launching.md`
+specifies.
 
 ## Role contract
 
@@ -166,7 +171,7 @@ anything the user needs to know.
 
 ## Recovery
 
-- Workstreams share the same project PRP store across worktrees. Their artifacts need no merge.
+- Workstreams write into the orchestrator's store because their prompts pin `PRP_DIR`. Their artifacts need no merge and outlive their worktrees. An owner that resolved its own store instead left its artifacts in the worktree; recover them before teardown.
 - Resume a live owner with a follow-up message so its context stays intact. Do not replace it merely to make a correction.
 - Native agents die with the orchestrator session. Preserve branches, PRs, and PRP artifacts for recovery. Never construct a detached CLI launch or silently switch engines.
 

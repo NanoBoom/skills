@@ -51,17 +51,17 @@ Pre-commitment only counts if it outlives the conversation. Write the frame to d
 
 ```bash
 # --- PRP store resolver (canonical; keep byte-identical across skills) ---
-# Store is `.prp/` in the project root. --git-common-dir makes every worktree of
-# a project share one store; the store gitignores itself. PRP_DIR relocates it.
-_gd="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"
-case "$_gd" in */.git) _root="${_gd%/.git}" ;; "") _root="$PWD" ;; *) _root="$_gd" ;; esac
+# Store is `.prp/` in the checkout root. --show-toplevel gives every worktree its
+# own store; the store gitignores itself. PRP_DIR relocates it.
+_root="$(git rev-parse --show-toplevel 2>/dev/null)"
+[ -n "$_root" ] || _root="$PWD"
 _root="$(cd "$_root" && pwd -P)"
 PRP_DIR="${PRP_DIR:-$_root/.prp}"
 mkdir -p "$PRP_DIR"; [ -f "$PRP_DIR/.gitignore" ] || printf '*\n' > "$PRP_DIR/.gitignore"
 mkdir -p "$PRP_DIR/spikes"
 ```
 
-The resolver keys off the main repo, so the file lands in the shared store and stays readable from the main checkout while the spike branch is untouched.
+Resolve it here, before Phase 2 isolates, and use that absolute path for the rest of the spike. The report then lands in the checkout you were launched from and survives the disposable spike worktree. Launched already inside a worktree, the store is that worktree's own: say so in the handoff, because whoever tears the checkout down takes the report with it.
 
 Read `templates/spike-report.md` now (mandatory) and create `$PRP_DIR/spikes/spike-<slug>.md` with its header, `## The question` section, and `**Verdict**: (pending)`. Phase 6 fills in the rest; the hypothesis, kill criteria, and verdict boundaries recorded here are **never edited after this point**. The pending marker keeps an abandoned spike visibly unfinished instead of reading as a report with a missing verdict.
 
@@ -129,7 +129,7 @@ Complete `$PRP_DIR/spikes/spike-<slug>.md` — read `templates/spike-report.md` 
 
 ## Phase 7 — Dispose
 
-**The evidence's permanent home is the store.** Copy whatever the verdict rests on — harness scripts, fixtures, captured output — into `$PRP_DIR/spikes/<slug>/`. It survives a discarded worktree, is shared across the project's worktrees, and needs no git operation an isolated agent may be unable to perform.
+**The evidence's permanent home is the store.** Copy whatever the verdict rests on — harness scripts, fixtures, captured output — into `$PRP_DIR/spikes/<slug>/`. Resolved in Phase 1, that path sits outside the spike worktree and survives its disposal, and it needs no git operation an isolated agent may be unable to perform.
 
 But `$PRP_DIR` is **local-only**, so a store path is unfollowable by anyone else. Read `references/handoff.md` for the routes that make evidence followable off this machine — a secret gist when the verdict travels somewhere others read, a branch only when the spike code is substantial enough to re-run — and for the `--here` patch capture.
 

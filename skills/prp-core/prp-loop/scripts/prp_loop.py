@@ -13,7 +13,7 @@ Pipeline:
 Design:
 - Headless: each stage is one CLI call in a fresh session — `claude -p "<prompt>"` by
   default, or `codex exec "<prompt>"` with --cli codex (the CLI choice persists in state).
-- State lives in <project-root>/.prp/state/prp-loop.state.json (resumable: re-run with --resume).
+- State lives in <checkout-root>/.prp/state/prp-loop.state.json (resumable: re-run with --resume).
 - Fully autonomous (permission/sandbox bypass flags per CLI).
 - Self-contained: this script owns both loops itself and detects "green" from each
   stage's `VALIDATION: GREEN` sentinel (parsed from the clean result text) and/or an
@@ -57,25 +57,15 @@ def _project_root() -> Path:
 
 
 def _prp_dir() -> Path:
-    """Resolve the per-project PRP store shared by the main checkout and worktrees.
+    """Resolve the PRP store of the checkout being operated on.
 
     Mirrors the canonical shell resolver the skills carry: the store is `.prp/` in
-    the project root, --git-common-dir puts every linked worktree on the main
-    checkout's store, and the store ignores itself so the loop's state never shows
-    up in `git status`. PRP_DIR relocates it.
+    the checkout root, --show-toplevel gives every worktree its own store, and the
+    store ignores itself so the loop's state never shows up in `git status`. The
+    state therefore stays with the worktree the loop drives. PRP_DIR relocates it;
+    set it to run several worktrees against one store.
     """
-    common = subprocess.run(
-        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
-        capture_output=True,
-        text=True,
-    )
-    gd = common.stdout.strip() if common.returncode == 0 else ""
-    if gd.endswith("/.git"):
-        root = Path(gd[:-5]).resolve()
-    elif gd:
-        root = Path(gd).resolve()
-    else:
-        root = Path.cwd().resolve()
+    root = _project_root().resolve()
 
     override = os.environ.get("PRP_DIR")
     prp_dir = Path(override).expanduser().resolve() if override else root / ".prp"
@@ -87,7 +77,7 @@ def _prp_dir() -> Path:
 
 
 ROOT = _project_root()  # worktree being operated on (git toplevel, else cwd)
-PRP_DIR = _prp_dir()  # store shared by all worktrees of the main checkout
+PRP_DIR = _prp_dir()  # that worktree's own store, unless PRP_DIR overrides it
 STATE_FILE = PRP_DIR / "state" / "prp-loop.state.json"
 PLANS_DIR = PRP_DIR / "plans"
 REVIEW_DIR = PRP_DIR / "reviews"
