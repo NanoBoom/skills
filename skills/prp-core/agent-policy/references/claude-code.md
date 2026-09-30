@@ -88,6 +88,22 @@ Model precedence, highest first:
 - Keep `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` unset. It overrides every per-call
   and definition model, so no routing survives it.
 
+## Naming
+
+| Launch | Field that carries `agent_type:model:effort` |
+| --- | --- |
+| Agent tool, fork included | `description` |
+| Workflow `agent()` | `label` |
+
+`agent_type` is the agent's name when `subagent_type` or `agentType` is a
+`prp-core:<agent>`, and a task name for anything else.
+
+Name the effort the agent runs at, not the table's. Through the Agent tool
+that is the agent type's `effort` frontmatter, or the session effort when the
+definition sets none: `prp-core:codebase-analyst` on a Code tracing task is
+`codebase-analyst:sonnet:high`, because its definition sets `high`.
+A fork carries the main session's model and effort.
+
 ## Session settings
 
 These set the main session, which every inheriting agent and every fork

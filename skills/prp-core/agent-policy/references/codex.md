@@ -97,3 +97,11 @@ The Codex plugin for Claude Code:
   delegation runs the machine's Codex defaults. Pass both.
 - Its `--effort` accepts `none`, `minimal`, `low`, `medium`, `high`, and
   `xhigh`. It does not accept `max` or `ultra`.
+
+## Naming
+
+The `prp-core` agents do not run in Codex, so `agent_type` is always a task
+name. Put the name in the spawn request of a Codex subagent: "spawn
+`find-config-callers:gpt-6-luna:low` to list every caller of parseConfig".
+`codex exec` and `/codex:rescue` take no name, so give it in the message
+that announces the launch: `fix-login-redirect:gpt-6.1-sol:high`.

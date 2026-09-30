@@ -63,6 +63,28 @@ evidence. A review's type follows the risk of the diff, not its size.
 - Route the agent, not the session. Do not change the user's session model or
   effort to suit one agent.
 
+## Step 4: Name the agent
+
+Name every agent `agent_type:model:effort`, so the routing shows wherever
+the agent is listed:
+
+- `agent_type`: for an agent defined in this plugin's `agents/` directory, its
+  name without the plugin scope: `codebase-analyst` for
+  `prp-core:codebase-analyst`. For every other launch, including built-in
+  types such as `Plan`, `Explore`, and `general-purpose`, forks, and Codex,
+  a task name instead: what the agent does, in two to five lowercase words
+  joined by hyphens. No colons.
+- `model`: the model it runs on, written as the reference's lookup table
+  writes it.
+- `effort`: the effort it runs at, which is not always the table's; the
+  reference says when the two differ. Write `n/a` for a model without effort
+  levels.
+
+Examples: `codebase-analyst:sonnet:high`, `root-cause-analyzer:opus:xhigh`,
+`write-auth-plan:opus:high`, `find-config-callers:haiku:n/a`.
+
+The reference says which field of each launch carries the name.
+
 ## Escalation
 
 Name why the agent failed before you retry.
@@ -73,3 +95,4 @@ Name why the agent failed before you retry.
 2. **It did not know enough.** It missed a subtle bug, misread the domain, or
    made the wrong design call. Retry one model step up at the same effort.
 3. Change one knob per retry, so the result shows which one mattered.
+4. Rename the retry to match, so its name shows the knob that changed.
