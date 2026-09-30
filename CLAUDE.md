@@ -109,14 +109,14 @@ claude -p "hi" --plugin-dir skills/github-project --debug-file /tmp/dbg-gp.log
 grep -E "Loaded [0-9]+ (agents|commands|skills)|plugin skills loaded|\[ERROR\]" /tmp/dbg.log
 ```
 
-`check-skills.mjs` reports `OK 26 skill(s) in 2 plugin(s), 11 agent(s)`.
-`npx skills` reports `Found 26 skills`, which it discovers by scanning `skills/`
+`check-skills.mjs` reports `OK 27 skill(s) in 2 plugin(s), 11 agent(s)`.
+`npx skills` reports `Found 27 skills`, which it discovers by scanning `skills/`
 rather than by reading a manifest, so the count is the same whether a bucket is
 promoted or not. `claude plugin validate .` checks the marketplace manifest only,
 which is why each `plugin.json` is validated by path as well. Validating the root
 `plugin.json` warns that `CLAUDE.md` at the plugin root is not loaded as project
 context; the warning is expected, so do not pass `--strict` to it. The root debug
-log shows 11 agents and 23 skills; the `github-project` one shows 3 skills and no
+log shows 11 agents and 24 skills; the `github-project` one shows 3 skills and no
 agents.
 
 To exercise the install path end to end without pushing, point the marketplace at

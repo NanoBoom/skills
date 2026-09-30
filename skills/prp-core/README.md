@@ -39,6 +39,7 @@ so a skill taken through `npx skills` alone will not have them.
 - **[prp-orchestrate](./prp-orchestrate/SKILL.md)**: runs parallel workstreams in isolated worktrees, holding human and merge gates.
 - **[prp-worktree](./prp-worktree/SKILL.md)**: create, list, and tear down worktrees under `.worktrees/` via a bundled CLI.
 - **[prp-worklist](./prp-worklist/SKILL.md)**: user-invoked. Renders a repository's open work so the maintainer can pick what is next.
+- **[agent-policy](./agent-policy/SKILL.md)**: picks the model and effort for every agent at launch by task type, to save tokens, with lookup tables for Claude Code and Codex.
 
 ## Authoring
 

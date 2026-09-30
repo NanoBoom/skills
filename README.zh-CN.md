@@ -73,6 +73,7 @@ worklist 两个 skill 仅支持用户主动调用。
 | `/prp-core:prp-orchestrate` | 把当前会话变成**编排者**：在 git worktree 里协调多条自主交付流，带人工闸门和合并闸门、长期决策记录以及合并排序 |
 | `/prp-core:prp-worktree` | 在 `.worktrees/` 下创建、列出并安全拆除隔离的检出 |
 | `/prp-core:prp-worklist` | 渲染一个仓库上待办的工作，让维护者看清下一步该接哪件。仅用户主动调用 |
+| `/prp-core:agent-policy` | 启动 agent 时按任务类型选定 model 和 effort，以节省 token。附 Claude Code 与 Codex 的速查表 |
 
 ### 撰写
 
@@ -205,7 +206,7 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 |---|---|---|
 | 装到本地的是什么 | skills、11 个 agent、Stop hooks | `SKILL.md` 文件及其配套目录 |
 | 调用方式 | `/prp-core:<name>`、`/github-project:<name>`，外加自动加载 | 取决于你的运行环境怎么处理 Agent Skill |
-| 安装单位 | 一次一个插件，`prp-core` 与 `github-project` 分开装 | 一整份扁平的 26 个 skill，或你点名的那几个 |
+| 安装单位 | 一次一个插件，`prp-core` 与 `github-project` 分开装 | 一整份扁平的 27 个 skill，或你点名的那几个 |
 | 更新 | 对着 marketplace 执行 `/plugin update` | `npx skills update` |
 | 适合场景 | 把 PRP 工作流当作整体使用 | 单独取一个自包含的 skill，或运行环境不是 Claude Code |
 
@@ -244,7 +245,7 @@ claude plugin list
 claude plugin details prp-core@nanoboom
 ```
 
-`details` 会打印组件清单：`prp-core` 是 23 个 skill、11 个 agent、2 个 hook，
+`details` 会打印组件清单：`prp-core` 是 24 个 skill、11 个 agent、2 个 hook，
 `github-project` 是 3 个 skill。在会话里，`/plugin` 会把两者列在 `nanoboom`
 marketplace 之下，输入 `/prp-core:` 也能补全出已安装的 skill。
 
@@ -320,7 +321,7 @@ skill。
 #### 你能得到什么，得不到什么
 
 `npx skills` 是靠扫描 `skills/` 目录来发现 skill 的，所以它会找到两个 bucket 里
-全部 26 个，并且不看插件清单。它只复制 `SKILL.md` 文件及其配套目录，本仓库的其
+全部 27 个，并且不看插件清单。它只复制 `SKILL.md` 文件及其配套目录，本仓库的其
 余内容一概不复制。它**不会**带上 [`agents/`](./agents) 里的 `prp-core:<agent>`
 子 agent，也不会带上 [`hooks/`](./hooks) 里的 Stop hook。
 

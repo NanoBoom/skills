@@ -27,8 +27,8 @@
     },
     {
       "title": "Orchestration and workspace",
-      "description": "Run parallel workstreams in isolated git worktrees and see what work is open.",
-      "skills": ["prp-orchestrate", "prp-worktree", "prp-worklist"]
+      "description": "Run parallel workstreams in isolated git worktrees, launch each agent on the model and effort its task type needs, and see what work is open.",
+      "skills": ["prp-orchestrate", "prp-worktree", "prp-worklist", "agent-policy"]
     },
     {
       "title": "Authoring",

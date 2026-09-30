@@ -1,7 +1,7 @@
 {
   "name": "prp-core",
   "displayName": "PRP Core",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Complete PRP workflow automation as agent skills - prd, plan, issue delivery, implement, debug, commit, pr, review, codebase research, a detached build loop, and a skill-authoring meta-skill, with specialized agents",
   "author": {
     "name": "NanoBoom",
@@ -21,6 +21,7 @@
     "github"
   ],
   "skills": [
+    "./skills/prp-core/agent-policy",
     "./skills/prp-core/prp-bro",
     "./skills/prp-core/prp-codebase-question",
     "./skills/prp-core/prp-commit",

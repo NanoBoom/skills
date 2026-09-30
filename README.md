@@ -76,6 +76,7 @@ maintainer triage and worklist skills are user-invocable only.
 | `/prp-core:prp-orchestrate` | Turn the session into an **orchestrator**: coordinate autonomous delivery workstreams in git worktrees, with human-only and merge gates, a standing-decisions log, and merge sequencing |
 | `/prp-core:prp-worktree` | Create, list, and safely tear down isolated checkouts under `.worktrees/` |
 | `/prp-core:prp-worklist` | Render a repository's open work so the maintainer can see what to take next. User-invocable only |
+| `/prp-core:agent-policy` | Pick the model and effort for every agent at launch by task type, to save tokens. Ships lookup tables for Claude Code and Codex |
 
 ### Authoring
 
@@ -214,7 +215,7 @@ There are two ways in, and they do not deliver the same thing.
 |---|---|---|
 | What lands | skills, the 11 agents, the Stop hooks | `SKILL.md` files and their supporting directories |
 | Invocation | `/prp-core:<name>`, `/github-project:<name>`, plus automatic loading | whatever your harness does with an Agent Skill |
-| Unit of install | one plugin at a time, `prp-core` and `github-project` separately | one flat set of 26 skills, or the ones you name |
+| Unit of install | one plugin at a time, `prp-core` and `github-project` separately | one flat set of 27 skills, or the ones you name |
 | Updates | `/plugin update` against the marketplace | `npx skills update` |
 | Best for | the PRP workflow as a whole | one self-contained skill, or a harness that is not Claude Code |
 
@@ -254,7 +255,7 @@ claude plugin list
 claude plugin details prp-core@nanoboom
 ```
 
-`details` prints the component inventory: 23 skills, 11 agents, 2 hooks for
+`details` prints the component inventory: 24 skills, 11 agents, 2 hooks for
 `prp-core`, and 3 skills for `github-project`. In-session, `/plugin` shows both
 under the `nanoboom` marketplace, and typing `/prp-core:` completes against the
 installed skills.
@@ -330,7 +331,7 @@ instead of symlinks, and `-y` skips the prompts. Later, `npx skills list`,
 
 #### What you get and what you do not
 
-`npx skills` discovers skills by scanning `skills/`, so it finds all 26 across
+`npx skills` discovers skills by scanning `skills/`, so it finds all 27 across
 both buckets and ignores the plugin manifests. It copies `SKILL.md` files and
 their supporting directories, and nothing else in this repository. It does
 **not** bring the `prp-core:<agent>` subagents in [`agents/`](./agents) or the
