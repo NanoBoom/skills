@@ -24,7 +24,7 @@ so a skill taken through `npx skills` alone will not have them.
 - **[prp-implement](./prp-implement/SKILL.md)**: executes an existing plan and corrects reviewed or failing-CI pull requests.
 - **[prp-commit](./prp-commit/SKILL.md)**: creates Git commits for completed work.
 - **[prp-pr](./prp-pr/SKILL.md)**: creates and opens GitHub pull requests.
-- **[prp-loop](./prp-loop/SKILL.md)**: runs the detached, resumable pipeline in fresh headless CLI sessions.
+- **[prp-loop](./prp-loop/SKILL.md)**: drives the resumable pipeline from this session, one fresh subagent per stage.
 - **[prp-deliver](./prp-deliver/SKILL.md)**: experimental. Only runs when invoked explicitly.
 
 ## Review and triage

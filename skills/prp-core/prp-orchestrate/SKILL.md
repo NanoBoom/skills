@@ -46,7 +46,7 @@ specifies.
 1. Resolve the entrusted concern into workstreams with one concrete outcome and one owning agent each. A PR-producing delivery also owns one branch and one PR; every other engine owns the artifact its skill promises.
 2. Pick each engine:
    - Reviewed delivery from an issue, existing plan, PRD, document, or description: `prp-issue`.
-   - Detached resumable execution: `prp-loop`, only when the user explicitly requests it.
+   - Script-gated resumable loop: `prp-loop`, only when the user explicitly requests it.
    - Plan that ends at the plan: `prp-plan`.
    - Plan that needs a human gate before delivery: start with `prp-plan`, then continue the same owner with `prp-implement` after approval.
    - Implementation without review: `prp-implement`.

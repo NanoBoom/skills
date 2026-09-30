@@ -31,8 +31,8 @@ loads them automatically when a request matches their description). The
 maintainer triage and worklist skills are user-invocable only.
 
 > **Claude Code is the supported harness.** Most skills dispatch the
-> `prp-core:<agent>` subagents in [`agents/`](./agents), and one uses the Stop
-> hook in [`hooks/`](./hooks). Neither travels through `npx skills`, which copies
+> `prp-core:<agent>` subagents in [`agents/`](./agents), and two use the Stop
+> hooks in [`hooks/`](./hooks). Neither travels through `npx skills`, which copies
 > `SKILL.md` files only. Install the plugin to get the whole thing.
 
 ## Skills
@@ -57,7 +57,7 @@ maintainer triage and worklist skills are user-invocable only.
 | `/prp-core:prp-implement` | Execute a plan through validated commit and PR; write the durable implementation report |
 | `/prp-core:prp-commit` | Smart commit with natural-language file targeting |
 | `/prp-core:prp-pr` | Push the branch and open a PR with template support |
-| `/prp-core:prp-loop` | **Detached** cyclic pipeline: plan → implement → PR → review, looping review→fix until clean. `--until implement` stops after a green implementation and open PR |
+| `/prp-core:prp-loop` | **Self-driving** cyclic pipeline: plan → implement → PR → review, looping review→fix until clean, each stage in a fresh visible subagent. `--until implement` stops after a green implementation and open PR |
 | `/prp-core:prp-deliver` | Experimental. Only runs when invoked explicitly |
 
 ### Review and triage
@@ -151,14 +151,24 @@ direction is a scope question for the operator, not a defect the author can fix 
 
 ## Hooks
 
-The plugin ships one Stop hook, `hooks/prp-research-team-stop.sh`, which
-validates `prp-research-team` output. The skill writes its plan path to a
+The plugin ships two Stop hooks.
+
+`hooks/prp-research-team-stop.sh` validates `prp-research-team` output. The skill writes its plan path to a
 sentinel file in `.prp/state/prp-research-team.state`; on Stop,
 the hook checks the plan for the six required sections and, if any are missing,
 blocks completion once with the list of what is absent. It cleans up the sentinel
 on success, ignores stale sentinels (older than 2 hours), and never blocks twice
-in a row. Note: the hook ships only with the plugin. If you copy the skill into
-`.claude/skills/` directly, this validation does not run.
+in a row.
+
+`hooks/prp-loop-stop.sh` keeps the session driving a `prp-loop` working until the
+loop is done or halted, which is what lets one `/prp-core:prp-loop` invocation run
+every stage. It reads only `.prp/state/prp-loop.state.json`: it holds the session
+recorded as the loop's owner while the loop is running, releases it while a
+dispatched stage subagent runs, and lets it stop after three continuations with no
+state change. Every other session stops normally.
+
+Both hooks ship only with the plugin. If you copy the skills into `.claude/skills/`
+directly, neither runs.
 
 ## Workflows
 
@@ -186,6 +196,7 @@ repeat /prp-core:prp-plan for the next phase
 ```
 /prp-core:prp-loop "add pagination to the API"
     ↓  plan → implement (loop to green) → PR → review → fix → re-review → clean
+       one fresh subagent per stage, driven from this session
 ```
 
 ### Input to a reviewed PR
@@ -201,7 +212,7 @@ There are two ways in, and they do not deliver the same thing.
 
 | | Claude Code plugin | `npx skills add` |
 |---|---|---|
-| What lands | skills, the 11 agents, the Stop hook | `SKILL.md` files and their supporting directories |
+| What lands | skills, the 11 agents, the Stop hooks | `SKILL.md` files and their supporting directories |
 | Invocation | `/prp-core:<name>`, `/github-project:<name>`, plus automatic loading | whatever your harness does with an Agent Skill |
 | Unit of install | one plugin at a time, `prp-core` and `github-project` separately | one flat set of 26 skills, or the ones you name |
 | Updates | `/plugin update` against the marketplace | `npx skills update` |
@@ -243,7 +254,7 @@ claude plugin list
 claude plugin details prp-core@nanoboom
 ```
 
-`details` prints the component inventory: 23 skills, 11 agents, 1 hook for
+`details` prints the component inventory: 23 skills, 11 agents, 2 hooks for
 `prp-core`, and 3 skills for `github-project`. In-session, `/plugin` shows both
 under the `nanoboom` marketplace, and typing `/prp-core:` completes against the
 installed skills.
@@ -323,7 +334,7 @@ instead of symlinks, and `-y` skips the prompts. Later, `npx skills list`,
 both buckets and ignores the plugin manifests. It copies `SKILL.md` files and
 their supporting directories, and nothing else in this repository. It does
 **not** bring the `prp-core:<agent>` subagents in [`agents/`](./agents) or the
-Stop hook in [`hooks/`](./hooks).
+Stop hooks in [`hooks/`](./hooks).
 
 So:
 
@@ -348,7 +359,7 @@ so edits in the tree take effect immediately.
 
 - Claude Code installed
 - Git configured; GitHub CLI (`gh`) for PR/issue operations
-- [`uv`](https://docs.astral.sh/uv/), which runs the bundled `prp-loop` orchestrator (`skills/prp-core/prp-loop/scripts/prp_loop.py`)
+- [`uv`](https://docs.astral.sh/uv/), which runs the bundled `prp-loop` state machine (`skills/prp-core/prp-loop/scripts/prp_loop.py`)
 
 ## Artifacts
 

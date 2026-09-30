@@ -28,7 +28,7 @@
 worklist 两个 skill 仅支持用户主动调用。
 
 > **Claude Code 是官方支持的运行环境。** 多数 skill 会派发
-> [`agents/`](./agents) 里的 `prp-core:<agent>` 子 agent，还有一个 skill 用到
+> [`agents/`](./agents) 里的 `prp-core:<agent>` 子 agent，还有两个 skill 用到
 > [`hooks/`](./hooks) 里的 Stop hook。这两类东西都不会经由 `npx skills` 分发，
 > 后者只复制 `SKILL.md` 文件。要获得完整能力，请安装插件。
 
@@ -54,7 +54,7 @@ worklist 两个 skill 仅支持用户主动调用。
 | `/prp-core:prp-implement` | 执行计划直到通过校验的提交和 PR，并写下可长期留存的实施报告 |
 | `/prp-core:prp-commit` | 支持自然语言指定文件的智能提交 |
 | `/prp-core:prp-pr` | 推送分支并按模板创建 PR |
-| `/prp-core:prp-loop` | **脱离会话**的循环流水线：plan → implement → PR → review，评审与修复反复循环直到干净。`--until implement` 会在实施变绿、PR 打开后停下 |
+| `/prp-core:prp-loop` | **自驱动**的循环流水线：plan → implement → PR → review，评审与修复反复循环直到干净，每个阶段都在一个可实时查看的全新子 agent 里运行。`--until implement` 会在实施变绿、PR 打开后停下 |
 | `/prp-core:prp-deliver` | 实验性。只有被显式调用时才会运行 |
 
 ### 评审与分诊
@@ -146,13 +146,20 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 
 ## Hooks
 
-插件带一个 Stop hook，`hooks/prp-research-team-stop.sh`，用于校验
-`prp-research-team` 的输出。该 skill 会把它的计划路径写进
+插件带两个 Stop hook。
+
+`hooks/prp-research-team-stop.sh` 用于校验 `prp-research-team` 的输出。该 skill 会把它的计划路径写进
 `.prp/state/prp-research-team.state` 这个哨兵文件；Stop 时 hook
 检查该计划是否包含六个必需章节，若有缺失，就带着缺失清单阻断一次完成。成功后它
-会清理哨兵文件，忽略过期哨兵（超过 2 小时），并且绝不连续阻断两次。注意：这个
-hook 只随插件分发。如果你只是把 skill 直接复制进 `.claude/skills/`，这项校验不
-会运行。
+会清理哨兵文件，忽略过期哨兵（超过 2 小时），并且绝不连续阻断两次。
+
+`hooks/prp-loop-stop.sh` 让驱动 `prp-loop` 的会话一直工作到循环 done 或 halted，
+正是它让一次 `/prp-core:prp-loop` 调用跑完所有阶段。它只读
+`.prp/state/prp-loop.state.json`：循环运行期间拦住记录为 owner 的那个会话；已派发的
+阶段子 agent 在运行时放行；连续三次续跑都没有状态变化时也放行。其他会话照常停止。
+
+两个 hook 都只随插件分发。如果你只是把 skill 直接复制进 `.claude/skills/`，它们都
+不会运行。
 
 ## 工作流
 
@@ -180,6 +187,7 @@ hook 只随插件分发。如果你只是把 skill 直接复制进 `.claude/skil
 ```
 /prp-core:prp-loop "add pagination to the API"
     ↓  plan → implement（循环到绿）→ PR → review → fix → 重新 review → 干净
+       每个阶段一个全新子 agent，由当前会话驱动
 ```
 
 ### 从输入到一个已评审的 PR
@@ -195,7 +203,7 @@ hook 只随插件分发。如果你只是把 skill 直接复制进 `.claude/skil
 
 | | Claude Code 插件 | `npx skills add` |
 |---|---|---|
-| 装到本地的是什么 | skills、11 个 agent、Stop hook | `SKILL.md` 文件及其配套目录 |
+| 装到本地的是什么 | skills、11 个 agent、Stop hooks | `SKILL.md` 文件及其配套目录 |
 | 调用方式 | `/prp-core:<name>`、`/github-project:<name>`，外加自动加载 | 取决于你的运行环境怎么处理 Agent Skill |
 | 安装单位 | 一次一个插件，`prp-core` 与 `github-project` 分开装 | 一整份扁平的 26 个 skill，或你点名的那几个 |
 | 更新 | 对着 marketplace 执行 `/plugin update` | `npx skills update` |
@@ -236,7 +244,7 @@ claude plugin list
 claude plugin details prp-core@nanoboom
 ```
 
-`details` 会打印组件清单：`prp-core` 是 23 个 skill、11 个 agent、1 个 hook，
+`details` 会打印组件清单：`prp-core` 是 23 个 skill、11 个 agent、2 个 hook，
 `github-project` 是 3 个 skill。在会话里，`/plugin` 会把两者列在 `nanoboom`
 marketplace 之下，输入 `/prp-core:` 也能补全出已安装的 skill。
 
@@ -337,7 +345,7 @@ skill。
 
 - 已安装 Claude Code
 - 已配置 Git；PR 与 issue 操作需要 GitHub CLI（`gh`）
-- [`uv`](https://docs.astral.sh/uv/)，用于运行内置的 `prp-loop` 编排器
+- [`uv`](https://docs.astral.sh/uv/)，用于运行内置的 `prp-loop` 状态机
   （`skills/prp-core/prp-loop/scripts/prp_loop.py`）
 
 ## 产物
