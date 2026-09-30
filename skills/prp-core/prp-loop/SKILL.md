@@ -29,7 +29,7 @@ One invocation runs `plan → implement (commit + PR) → review` and loops `rev
 2. Commit to the loop's end state before the first stage. The objective is that `LOOP status` reports status `done` or `halted`: a terminal loop, not a clean review. If your environment can hold a persistent objective that keeps you working across turns, set it to exactly that, and mark it achieved only when `LOOP status` confirms it.
 
 3. While the action is `"agent"`:
-   1. Dispatch one fresh subagent, with its own context rather than a copy of this conversation, and `prompt` as its entire task.
+   1. Dispatch one fresh subagent, with its own context rather than a copy of this conversation, and `prompt` as its entire task. Launch it on the model and effort the `agent-policy` skill gives the action's `stage`: `plan` is Planning and design, `implement` Feature implementation, `pr` Mechanical edit, `review` Routine review or High-risk review by the diff's risk, and `fix` Bounded implementation, or Feature implementation when the accepted findings span modules.
    2. Run `LOOP dispatched`.
    3. Wait until that subagent has finished. A wait that times out is not completion; wait again. If the subagent runs in the background and you are resumed when it finishes, you may end your turn while it runs.
    4. Run `LOOP report`, even when the subagent failed or wrote no result file. The script applies the gates and prints the next action.

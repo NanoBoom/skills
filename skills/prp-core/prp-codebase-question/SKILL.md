@@ -88,6 +88,7 @@ AREAS:
 1. Start with `prp-core:codebase-explorer` to find what exists
 2. Then use `prp-core:codebase-analyst` on the most relevant findings to trace how they work
 3. Run agents in parallel when they're searching for different areas
+4. Launch each agent on the model and effort the `agent-policy` skill gives its task type: the explorer is Search, the analyst Code tracing, the web researcher Web research
 
 **PHASE_2_CHECKPOINT:**
 - [ ] Query decomposed into 2-5 research areas

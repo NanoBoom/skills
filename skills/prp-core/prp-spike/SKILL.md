@@ -82,7 +82,7 @@ Otherwise use the prp-worktree skill to create a worktree named `spike/<slug>` a
 Read only enough to choose a **credible** approach — one a competent engineer would defend. A spike that fails because of a naive approach has proven nothing about the idea.
 
 - Prefer primary sources: official docs, the dependency's actual source, specs, the codebase itself.
-- Use `prp-core:web-researcher` for anything outside the training cutoff, and `prp-core:codebase-analyst` to learn how the relevant subsystem really works before assuming what it allows.
+- Use `prp-core:web-researcher` for anything outside the training cutoff, and `prp-core:codebase-analyst` to learn how the relevant subsystem really works before assuming what it allows. Launch them on the model and effort the `agent-policy` skill gives Web research and Code tracing.
 - Stop when the approach is defensible. Research is not the deliverable here; the build is.
 
 ## Phase 4 — Build the falsifier

@@ -97,7 +97,10 @@ Dispatch every selected agent in parallel when capacity permits, or sequentially
 All agents are advisory and must not modify files or post their own PR comments.
 
 Spawn every selected agent in its named reviewer role. Do not paraphrase the role's defect class in the
-launch prompt; the agent definition owns it. Give every reviewer this shared instruction:
+launch prompt; the agent definition owns it. Launch each reviewer on the model and effort the
+`agent-policy` skill gives its task type: `comments` and `docs` are Routine review; every other scope
+is Routine review, or High-risk review when the diff's risk calls for it. Correction verification
+keeps each scope's original type. Give every reviewer this shared instruction:
 
 > Review PR #<number> at exact head `<reviewed_head>` against its actual base. Work only in `<review checkout path>`; never run a command that moves any other tree. Do not follow a newer head. Read `engineering.md` when the project has one, wherever it lives in the repository, and judge the change against the standard it sets. Suggest `Critical`, `Important`, or `Suggestion` for each finding based on its actual consequence. When one finding proves that a member of a finite class violates an invariant, enumerate that class with a deterministic repository search before reporting, and return one finding naming the invariant, the search you ran, every affected member, and every member you examined and found clean; a member you could not examine is unexamined, never clean. The coordinator independently determines final severity and merge readiness. Do not modify files, commit, or post comments.
 

@@ -42,6 +42,10 @@ Do not use the Agent tool's `isolation: "worktree"` for a workstream that may be
 reclaims that checkout once it releases an unchanged owner, which is what a finished delivery looks
 like, and the next resume lands silently in the operator's own checkout.
 
+- Launch every owner on the model and effort the `agent-policy` skill gives its work: a PR-producing
+  owner is Feature implementation, a `prp-plan` or `prp-prd` owner Planning and design, and a
+  `prp-codebase-question` or `prp-debug` owner Code tracing. The agents an owner starts follow the
+  same policy through its skills.
 - Give PR-producing work one agent, `run_in_background` (the default), in its own managed worktree.
 - Run work that does not modify the checkout as a plain background agent: `prp-codebase-question`,
   `prp-debug`, `prp-plan`, and `prp-prd`. Assign only one `prp-debug` owner per GitHub issue because it

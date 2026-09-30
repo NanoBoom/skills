@@ -183,7 +183,7 @@ For each researcher, define:
 | **Name** | Descriptive role name (e.g., "API Compatibility Analyst") |
 | **Focus** | 1-2 sentence description of their research area |
 | **Sub-questions** | Which SQ-IDs they own |
-| **Model** | `sonnet` for most research, `opus` for synthesis/complex analysis |
+| **Model and effort** | From the `agent-policy` skill: Web research or Code tracing for a researcher, Planning and design for synthesis |
 | **Spawn prompt** | Complete instructions for the agent — must be self-contained |
 | **Output format** | Exact structure of their deliverable (markdown sections, tables, etc.) |
 | **Completion criteria** | Measurable conditions that define "done" |
@@ -198,14 +198,17 @@ Each spawn prompt MUST include:
 5. **Quality bar**: What constitutes sufficient depth
 6. **Completion signal**: How to indicate research is complete (update shared task)
 
-### 4.3 Model Selection
+### 4.3 Model and Effort Selection
 
-| Researcher Type | Recommended Model | Rationale |
-|-----------------|-------------------|-----------|
-| Data gatherer / doc reviewer | `sonnet` | Efficient for search and extraction |
-| Deep analyst / synthesizer | `opus` | Better reasoning for complex analysis |
-| Benchmarker / comparator | `sonnet` | Structured comparison tasks |
-| Lead researcher / integrator | `opus` | Synthesis across multiple inputs |
+Classify each researcher's work, then take the model and effort the `agent-policy` skill gives that
+task type for the tool that will run the team:
+
+| Researcher Type | Task type |
+|-----------------|-----------|
+| Data gatherer / doc reviewer | Web research, or Search when the material is in the codebase |
+| Deep analyst | Code tracing |
+| Benchmarker / comparator | Summarize |
+| Lead researcher / integrator / synthesizer | Planning and design |
 
 ### 4.4 Apply Orchestration to Team
 
@@ -216,7 +219,7 @@ If `ORCHESTRATION` is set, verify the team composition aligns with the guidance.
 - [ ] Spawn prompts are self-contained (no external context needed)
 - [ ] Output formats are specific and structured
 - [ ] Completion criteria are measurable
-- [ ] Model selection is justified
+- [ ] Each researcher's model and effort match its task type in `agent-policy`
 - [ ] Team covers all sub-questions with no gaps
 
 ---
@@ -347,7 +350,7 @@ Write the research plan to the output path using this exact template:
 
 - **Focus**: {1-2 sentence description}
 - **Sub-questions**: {SQ-IDs}
-- **Model**: {sonnet / opus}
+- **Model and effort**: {model} / {effort}, from `agent-policy` for {task type}
 - **Output format**: {description of deliverable structure}
 - **Completion criteria**: {measurable conditions}
 
@@ -406,7 +409,7 @@ This research plan is designed for execution using Claude Code's experimental **
 
 ### Execution Steps
 
-1. **Create team**: Use `TeamCreate` to spawn all researchers defined in Team Composition
+1. **Create team**: Use `TeamCreate` to spawn all researchers defined in Team Composition, each on its listed model and effort
 2. **Create shared tasks**: Use the shared task list to create all tasks from the Research Tasks section
 3. **Set dependencies**: Link tasks with their dependencies so agents pick up work in the correct order
 4. **Monitor progress**: Use delegate mode or direct messaging to check on researcher progress
@@ -492,9 +495,9 @@ Display a summary to the user:
 
 ### Team Composition ({N} researchers)
 
-| Researcher | Focus | Model |
-|------------|-------|-------|
-| {name} | {1-line focus} | {model} |
+| Researcher | Focus | Model | Effort |
+|------------|-------|-------|--------|
+| {name} | {1-line focus} | {model} | {effort} |
 
 ### Plan Overview
 
@@ -512,7 +515,7 @@ To execute this research plan with agent teams:
 ### Manual Execution Alternative
 
 If agent teams is not available, execute sequentially:
-1. Work through Wave 1 tasks in parallel using Task tool subagents
+1. Work through Wave 1 tasks in parallel using Task tool subagents, each on its Team Composition model and effort
 2. Feed Wave 1 outputs into Wave 2 tasks
 3. Synthesize in Wave 3
 ```

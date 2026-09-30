@@ -26,7 +26,7 @@ If GitHub access or the repository cannot be resolved, complete the diagnosis bu
 
 ## 2. Run the root-cause analysis
 
-Spawn `prp-core:root-cause-analyzer` with the original report, complete tracker context, repository path, and any decisive runtime evidence already available. Do not give it a preferred cause or fix.
+Spawn `prp-core:root-cause-analyzer` with the original report, complete tracker context, repository path, and any decisive runtime evidence already available. Do not give it a preferred cause or fix. Launch it on the model and effort the `agent-policy` skill gives Hard debugging, or Code tracing when the report already shows a deterministic failure confined to one module.
 
 Require:
 

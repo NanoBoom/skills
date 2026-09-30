@@ -45,6 +45,9 @@ evidence should settle:
 - `prp-core:web-researcher` — how this is solved elsewhere, known pitfalls, or platform facts that
   decide an approach. Prefer primary sources.
 
+Launch each on the model and effort the `agent-policy` skill gives its task type: the explorer is
+Search, the analyst Code tracing, the web researcher Web research.
+
 Subagent dispatch needs the installed `prp-core` plugin; without it, do the same research inline.
 
 Report only the findings that changed your thinking, and say what they changed. If feasibility is now

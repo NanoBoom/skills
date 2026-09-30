@@ -70,6 +70,10 @@ For a non-trivial code change, launch these in parallel, adapting the prompts in
   state ownership, contracts, observable effects.
 - `prp-core:root-cause-analyzer` — for broken behavior only; see step 3.
 
+Launch every agent in this skill on the model and effort the `agent-policy` skill gives its task
+type: the explorer is Search, the analyst Code tracing, the root-cause analyzer Hard debugging,
+`prp-core:web-researcher` Web research, and a delegated `/prp-spike` agent Bounded implementation.
+
 Subagent dispatch needs the installed `prp-core` plugin; without it, gather the same evidence
 inline. For a small documentation, configuration, or narrowly localized change, skip the agents and
 inspect directly. Either way the planner owns synthesis and reads the decisive files itself.
