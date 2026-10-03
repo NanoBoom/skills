@@ -105,3 +105,12 @@ name. Put the name in the spawn request of a Codex subagent: "spawn
 `find-config-callers:gpt-6-luna:low` to list every caller of parseConfig".
 `codex exec` and `/codex:rescue` take no name, so give it in the message
 that announces the launch: `fix-login-redirect:gpt-6.1-sol:high`.
+
+The effort field is the level the agent resolves to, never where it came
+from: not `parent`, `config`, `inherit`, or `default`. A custom agent file
+that sets `model_reasoning_effort` wins over the spawn value, so name the
+file's level. A launch that passes no effort runs at the value resolved under
+Passing model and effort: the profile or base config, then for a subagent the
+`[agents]` default and the parent's level, then the model's default from the
+Effort table. A `codex exec -m gpt-6.1-sol` with no effort set anywhere is
+`fix-login-redirect:gpt-6.1-sol:low`.

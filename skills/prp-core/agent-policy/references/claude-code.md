@@ -104,6 +104,19 @@ definition sets none: `prp-core:codebase-analyst` on a Code tracing task is
 `codebase-analyst:sonnet:high`, because its definition sets `high`.
 A fork carries the main session's model and effort.
 
+The effort field is always a level, so resolve an inherited session effort
+before you write it, taking the first that applies:
+
+1. `CLAUDE_CODE_EFFORT_LEVEL`, when set.
+2. The level the user chose with `/effort` or `--effort`, or set in
+   `modelSettings.<model-id>.effort`.
+3. The agent's model's default from the Effort table: `medium` for `sonnet`
+   and `opus`, `high` for `fable`.
+
+A `general-purpose` agent on `opus` for a Planning and design task, in a
+session with no effort set, is `write-auth-plan:opus:medium`, not
+`write-auth-plan:opus:session`.
+
 ## Session settings
 
 These set the main session, which every inheriting agent and every fork

@@ -76,9 +76,11 @@ the agent is listed:
   joined by hyphens. No colons.
 - `model`: the model it runs on, written as the reference's lookup table
   writes it.
-- `effort`: the effort it runs at, which is not always the table's; the
-  reference says when the two differ. Write `n/a` for a model without effort
-  levels.
+- `effort`: the level it runs at, which is not always the table's; the
+  reference says when the two differ. Always a level such as `low` or
+  `high`, never where it came from: when the agent inherits the session
+  effort, write the session's level, not `session`, `inherit`, or `default`.
+  Write `n/a` for a model without effort levels.
 
 Examples: `codebase-analyst:sonnet:high`, `root-cause-analyzer:opus:xhigh`,
 `write-auth-plan:opus:high`, `find-config-callers:haiku:n/a`.
