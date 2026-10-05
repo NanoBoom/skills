@@ -60,4 +60,4 @@ Only when the user explicitly asks for `.html`: write a single self-contained ht
 
 ## Report
 
-One line to the user: the expanded absolute output path plus which diagram types were produced.
+One line to the user: the expanded absolute output path plus which diagram types were produced. Write it under the `response-policy` skill.

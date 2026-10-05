@@ -40,4 +40,4 @@ Respect enforced repository syntax such as required types or scopes. Treat Git h
 
 Stage and commit only the intended work. Verify the resulting commit contains every intended change, excludes unrelated changes, and leaves the remaining worktree state untouched. Do not amend or push unless explicitly requested.
 
-Return the commit hash, message, committed scope, and any remaining changes. The commit is the artifact; do not create a separate report.
+Return the commit hash, message, committed scope, and any remaining changes. Write that reply under the `response-policy` skill; the commit message keeps this skill's rules. The commit is the artifact; do not create a separate report.

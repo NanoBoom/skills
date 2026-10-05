@@ -143,7 +143,9 @@ asks for prerequisites; permission to update the target issue does not extend to
 When an existing published plan no longer matches the contract, say it must be revised and
 republished before implementation. Do not silently rewrite it or invoke the planner.
 
-Report in the repository's own format when it has one, otherwise:
+Write the report under the `response-policy` skill. Keep the mode and verdict values verbatim, and
+quote proposed titles, bodies, and comments in the language they will be published in. Report in
+the repository's own format when it has one, otherwise:
 
 ```markdown
 ## Verdict

@@ -77,6 +77,7 @@ maintainer triage and worklist skills are user-invocable only.
 | `/prp-core:prp-worktree` | Create, list, and safely tear down isolated checkouts under `.worktrees/` |
 | `/prp-core:prp-worklist` | Render a repository's open work so the maintainer can see what to take next. User-invocable only |
 | `/prp-core:agent-policy` | Pick the model and effort for every agent at launch by task type, to save tokens. Ships lookup tables for Claude Code and Codex |
+| `/prp-core:response-policy` | Write every reply to the user in the user's language, conclusion first, under controlled writing: ASD-STE100 at 80% for English, controlled technical Chinese for Chinese. Every reporting skill applies it |
 
 ### Authoring
 
@@ -152,7 +153,7 @@ direction is a scope question for the operator, not a defect the author can fix 
 
 ## Hooks
 
-The plugin ships two Stop hooks.
+The plugin ships two Stop hooks and one opt-in UserPromptSubmit hook.
 
 `hooks/prp-research-team-stop.sh` validates `prp-research-team` output. The skill writes its plan path to a
 sentinel file in `.prp/state/prp-research-team.state`; on Stop,
@@ -168,8 +169,21 @@ recorded as the loop's owner while the loop is running, releases it while a
 dispatched stage subagent runs, and lets it stop after three continuations with no
 state change. Every other session stops normally.
 
-Both hooks ship only with the plugin. If you copy the skills into `.claude/skills/`
-directly, neither runs.
+`hooks/prp-response-policy-prompt.sh` is off by default. Every PRP skill that
+reports to you already applies the `response-policy` skill at its report step;
+this hook extends the policy to every other reply. Turn it on by setting
+`PRP_RESPONSE_POLICY` to `1` in the `env` block of your Claude Code settings:
+
+```json
+{ "env": { "PRP_RESPONSE_POLICY": "1" } }
+```
+
+When it is on, each prompt gets one short reminder, under 100 tokens: reply in
+your language, conclusion first, under controlled writing. It does not read the
+prompt. Remove the variable to turn it off.
+
+All three hooks ship only with the plugin. If you copy the skills into
+`.claude/skills/` directly, none of them runs.
 
 ## Workflows
 
@@ -213,9 +227,9 @@ There are two ways in, and they do not deliver the same thing.
 
 | | Claude Code plugin | `npx skills add` |
 |---|---|---|
-| What lands | skills, the 11 agents, the Stop hooks | `SKILL.md` files and their supporting directories |
+| What lands | skills, the 11 agents, the hooks | `SKILL.md` files and their supporting directories |
 | Invocation | `/prp-core:<name>`, `/github-project:<name>`, plus automatic loading | whatever your harness does with an Agent Skill |
-| Unit of install | one plugin at a time, `prp-core` and `github-project` separately | one flat set of 27 skills, or the ones you name |
+| Unit of install | one plugin at a time, `prp-core` and `github-project` separately | one flat set of 28 skills, or the ones you name |
 | Updates | `/plugin update` against the marketplace | `npx skills update` |
 | Best for | the PRP workflow as a whole | one self-contained skill, or a harness that is not Claude Code |
 
@@ -255,7 +269,7 @@ claude plugin list
 claude plugin details prp-core@nanoboom
 ```
 
-`details` prints the component inventory: 24 skills, 11 agents, 2 hooks for
+`details` prints the component inventory: 25 skills, 11 agents, 3 hooks for
 `prp-core`, and 3 skills for `github-project`. In-session, `/plugin` shows both
 under the `nanoboom` marketplace, and typing `/prp-core:` completes against the
 installed skills.
@@ -331,11 +345,11 @@ instead of symlinks, and `-y` skips the prompts. Later, `npx skills list`,
 
 #### What you get and what you do not
 
-`npx skills` discovers skills by scanning `skills/`, so it finds all 27 across
+`npx skills` discovers skills by scanning `skills/`, so it finds all 28 across
 both buckets and ignores the plugin manifests. It copies `SKILL.md` files and
 their supporting directories, and nothing else in this repository. It does
 **not** bring the `prp-core:<agent>` subagents in [`agents/`](./agents) or the
-Stop hooks in [`hooks/`](./hooks).
+hooks in [`hooks/`](./hooks).
 
 So:
 

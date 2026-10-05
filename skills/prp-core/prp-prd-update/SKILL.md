@@ -26,4 +26,4 @@ Never mark a phase complete merely because implementation passed or a PR exists.
 
 ## Verify and report
 
-Re-read the exact phase row after editing. Confirm its status and links match the requested stage and that the Markdown table remains valid. Return the PRD path, phase number, resulting status, and recorded links. Do not create a separate report artifact.
+Re-read the exact phase row after editing. Confirm its status and links match the requested stage and that the Markdown table remains valid. Return the PRD path, phase number, resulting status, and recorded links. Write that return under the `response-policy` skill. Do not create a separate report artifact.

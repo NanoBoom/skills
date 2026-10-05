@@ -95,6 +95,6 @@ Create a ready-for-review PR against the resolved base. Use `--draft` only when 
 
 Read the created PR back from GitHub and verify its number, URL, title, base, head, draft state, and open state. Check CI status without waiting for pending jobs.
 
-Return the PR URL first, followed by the verified title, `base <- head`, ready/draft state, and current checks. Keep the report concise.
+Return the PR URL first, followed by the verified title, `base <- head`, ready/draft state, and current checks. Keep the report concise, and write it under the `response-policy` skill.
 
 Do not report success until GitHub confirms the PR exists with the intended base and head.

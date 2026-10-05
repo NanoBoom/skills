@@ -485,7 +485,7 @@ The final research report (produced during execution, not in this plan) should f
 
 ## Phase 7: OUTPUT — Report to User
 
-Display a summary to the user:
+Display a summary to the user, written under the `response-policy` skill:
 
 ```markdown
 ## Research Plan Created

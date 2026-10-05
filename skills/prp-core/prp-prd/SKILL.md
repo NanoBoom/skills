@@ -29,7 +29,8 @@ completeness.
 - **Success** — the observable outcome that would show it worked.
 
 Stop when another answer would not change the PRD. Before generating, restate the problem and scope
-in one short paragraph so a wrong premise is cheap to correct.
+in one short paragraph so a wrong premise is cheap to correct. Write the questions and this
+restatement under the `response-policy` skill.
 
 ## 2. Ground it
 
@@ -82,7 +83,7 @@ spelling: `/prp-plan` selects the next actionable phase from it, and `/prp-prd-u
 
 ## 4. Hand off
 
-Report:
+Report under the `response-policy` skill:
 
 ```markdown
 ## PRD Created

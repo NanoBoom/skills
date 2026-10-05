@@ -16,3 +16,17 @@ Changes from upstream at the time of the fork:
 - `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` were
   rewritten for this repository, and `skills.sh.json` was added.
 - The skills, agents, and hook themselves are unmodified.
+
+Third-party material adapted after the fork:
+
+- `skills/prp-core/response-policy/references/chinese.md` adapts rules and
+  samples from https://github.com/Fenng/Tech-Doc-Style-Chinese
+  (`references/controlled-technical-chinese.md` and
+  `references/terminology-and-typography.md`), Copyright (c) 2026 Fenng,
+  licensed under the MIT License.
+- The sentence limits and the light-verb and `的` checks in the same skill
+  follow https://github.com/QingYunA/answer-me-with-html
+  (`src/lint/ste.js`), Copyright (c) 2026 Answer me with HTML contributors,
+  licensed under the MIT License.
+
+Both licenses grant permission on the terms reproduced in LICENSE.

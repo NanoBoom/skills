@@ -229,4 +229,5 @@ Read the PR back to verify the canonical comment exists and capture its stable U
 `publication: pending` in the local report and comment after first creation; on re-review, preserve the
 existing URL. Then re-read the report and GitHub state to verify their bodies agree. Return the PR URL,
 verdict, finding and disposition counts, validation summary, selected scopes, absolute report path,
-and canonical comment URL.
+and canonical comment URL. Write that return under the `response-policy` skill; the report and
+comment keep the template's format.

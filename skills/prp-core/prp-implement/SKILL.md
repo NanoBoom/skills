@@ -164,7 +164,8 @@ the intended scope, the PR targets the correct base, and the report exists at th
 
 Return the implemented outcome, absolute plan path, validation summary, deviations or blocker plus
 recovery action, commit, PR URL, tracked follow-ups, conditional PRD update, and absolute report
-path. Do not review, merge, move, or archive the plan.
+path. Write that return under the `response-policy` skill. Do not review, merge, move, or archive
+the plan.
 
 When every required validation and acceptance criterion passes and every required delivery step
 succeeds, end the response with exactly `VALIDATION: GREEN`. Otherwise end with `VALIDATION: FAILED`

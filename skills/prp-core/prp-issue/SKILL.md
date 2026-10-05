@@ -69,4 +69,4 @@ After `READY TO MERGE`, wait for every required CI check. A pending check is not
 
 ## 6. Return proof and follow-ups
 
-Only after review and CI are green, return the outcome, absolute plan and implementation-report paths, PR URL, latest review verdict, review-report path, publication URL, validation, and CI evidence. Then suggest only meaningful remaining non-blocking follow-ups, including already-created tracking issues; do not present required unfinished work as optional follow-up.
+Only after review and CI are green, return the outcome, absolute plan and implementation-report paths, PR URL, latest review verdict, review-report path, publication URL, validation, and CI evidence. Then suggest only meaningful remaining non-blocking follow-ups, including already-created tracking issues; do not present required unfinished work as optional follow-up. Write the return under the `response-policy` skill.

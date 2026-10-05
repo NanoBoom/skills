@@ -61,4 +61,4 @@ Otherwise refresh the issue and relevant linked work, then:
 
 Use existing labels only; never invent or create repository labels. If labels are missing, suggest adding the label to the user. Keep publication idempotent: update a prior `<!-- prp-maintainer-triage -->` comment authored by the current account instead of adding another. Read back every changed label, comment, or state before claiming it succeeded.
 
-Report the verdict, tested SHA or version, decisive evidence, GitHub actions taken, and any unresolved maintainer decision. Do not route to another workflow.
+Report the verdict, tested SHA or version, decisive evidence, GitHub actions taken, and any unresolved maintainer decision. Write that report under the `response-policy` skill; the GitHub comment keeps the format above. Do not route to another workflow.

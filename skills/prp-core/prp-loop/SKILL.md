@@ -34,7 +34,7 @@ One invocation runs `plan → implement (commit + PR) → review` and loops `rev
    3. Wait until that subagent has finished. A wait that times out is not completion; wait again. If the subagent runs in the background and you are resumed when it finishes, you may end your turn while it runs.
    4. Run `LOOP report`, even when the subagent failed or wrote no result file. The script applies the gates and prints the next action.
 
-4. On `done` or `halted`, give the user the outcome, the PR URL, the halt reason if any, and the state file path.
+4. On `done` or `halted`, give the user the outcome, the PR URL, the halt reason if any, and the state file path. Write it under the `response-policy` skill.
 
 When you lose track (after compaction, an interruption, or a reminder to continue), run `LOOP next`. It returns the same pending action until it is reported. An action with `dispatched_at` whose subagent is still running needs waiting, not a second dispatch. When the session that dispatched it is gone, resume the loop instead; resuming reruns the interrupted stage from its start.
 

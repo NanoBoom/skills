@@ -47,6 +47,6 @@ and print a link the operator can open. If a `helm-canvas` skill is available, f
 
 End with a short note: what you grouped by, what you left out, what you could not tell from the
 tracker alone. That note is the point of this skill being loose — it is how the shape gets
-decided by evidence rather than up front.
+decided by evidence rather than up front. Write the note under the `response-policy` skill.
 
 If something here got in your way, say that too.

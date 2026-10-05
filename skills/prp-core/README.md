@@ -40,6 +40,7 @@ so a skill taken through `npx skills` alone will not have them.
 - **[prp-worktree](./prp-worktree/SKILL.md)**: create, list, and tear down worktrees under `.worktrees/` via a bundled CLI.
 - **[prp-worklist](./prp-worklist/SKILL.md)**: user-invoked. Renders a repository's open work so the maintainer can pick what is next.
 - **[agent-policy](./agent-policy/SKILL.md)**: picks the model and effort for every agent at launch by task type, to save tokens, with lookup tables for Claude Code and Codex.
+- **[response-policy](./response-policy/SKILL.md)**: sets the language, shape, and controlled-writing rules for every reply a skill gives the user: the user's language, conclusion first, ASD-STE100 at 80% for English, controlled technical Chinese for Chinese.
 
 ## Authoring
 

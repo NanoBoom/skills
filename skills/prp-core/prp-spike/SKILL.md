@@ -144,7 +144,7 @@ A spike that ends in the operator's terminal changes nothing. Propose where the 
 
 **Propose; do not act.** Creating or commenting on a tracker item is outward-facing, and this skill's terminal act is a verdict — never a merge, a PR, or an unrequested ticket. `references/handoff.md` has the routing table and what each verdict should ask for; a CONDITIONAL in particular must be framed as a decision, not filed as a task.
 
-Report to the user: the hypothesis, the verdict, the two or three pieces of evidence that decided it, where the evidence lives, the report path, and the proposed destination. Lead with the verdict.
+Report to the user: the hypothesis, the verdict, the two or three pieces of evidence that decided it, where the evidence lives, the report path, and the proposed destination. Lead with the verdict, and write the report under the `response-policy` skill.
 
 ## Gotchas
 
