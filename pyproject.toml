@@ -1,0 +1,25 @@
+[project]
+name = "nanoboom-skills-tools"
+version = "0.1.0"
+description = "Maintainer tooling: generate, validate, and install harness artifacts from plugins/."
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tools/tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+include = ["tools/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

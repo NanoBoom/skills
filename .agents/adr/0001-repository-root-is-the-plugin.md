@@ -1,7 +1,7 @@
 # 0001: The repository root is the plugin
 
 Date: 2026-09-11
-Status: Accepted
+Status: Superseded by [0002](./0002-plugins-directory-and-harness-adapters.md)
 
 ## Context
 

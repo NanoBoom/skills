@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "nanoboom",
-  "version": "0.1.0",
-  "description": "NanoBoom's Claude Code plugins",
+  "version": "0.2.0",
+  "description": "NanoBoom's plugins for Claude Code, Codex, and Pi",
   "owner": {
     "name": "NanoBoom",
     "email": "cinuor@gmail.com",
@@ -12,12 +12,12 @@
     {
       "name": "prp-core",
       "description": "Complete PRP workflow automation as agent skills - prd, plan, issue delivery, implement, debug, commit, pr, review, codebase research, a detached build loop, and a skill-authoring meta-skill, with specialized agents",
-      "source": "./",
-      "version": "0.6.0",
+      "source": "./plugins/prp-core",
+      "version": "0.7.0",
       "category": "development",
       "license": "MIT",
       "strict": true,
-      "homepage": "https://github.com/NanoBoom/skills",
+      "homepage": "https://github.com/NanoBoom/skills/tree/main/plugins/prp-core",
       "author": {
         "name": "NanoBoom",
         "email": "cinuor@gmail.com"
@@ -44,12 +44,12 @@
     {
       "name": "github-project",
       "description": "GitHub Issue requirement management with the gh CLI - set up the Project, its fields, views and automations, run the Issue lifecycle end to end, and audit Issue quality and Issue-to-Project consistency against a stable rule catalog",
-      "source": "./skills/github-project",
-      "version": "0.3.0",
+      "source": "./plugins/github-project",
+      "version": "0.4.0",
       "category": "development",
       "license": "MIT",
       "strict": true,
-      "homepage": "https://github.com/NanoBoom/skills/tree/main/skills/github-project",
+      "homepage": "https://github.com/NanoBoom/skills/tree/main/plugins/github-project",
       "author": {
         "name": "NanoBoom",
         "email": "cinuor@gmail.com"

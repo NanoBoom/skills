@@ -16,3 +16,14 @@ Changes from upstream at the time of the fork:
 - `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` were
   rewritten for this repository, and `skills.sh.json` was added.
 - The skills, agents, and hook themselves are unmodified.
+
+Later changes:
+
+- 2026-10-05: plugins moved to `plugins/<name>/`, which restores the upstream
+  layout, and `prp-worktree` names its script by "this skill's directory"
+  instead of `${CLAUDE_PLUGIN_ROOT}`.
+
+The harness adapters under `tools/` (`tools/adapters/base.py`,
+`capabilities.py`, `codex.py`, and the generate and install scripts) are
+adapted from https://github.com/wshobson/agents, Copyright (c) 2024 Seth
+Hobson, licensed under the MIT License.

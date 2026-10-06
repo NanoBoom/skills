@@ -10,21 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # Repository invariants: plugin.json `skills` matches the bucket on disk,
-      # frontmatter matches directory names, every dispatched prp-core:<agent>
-      # exists, and the READMEs and skills.sh.json stay in sync.
-      # Plain Node, no dependencies to install.
-      - run: node scripts/check-skills.mjs
+      # The npx skills view of the tree.
+      - run: npx --yes skills@latest add . --list
+
+      # Repository contract and every generated artifact; then the adapter
+      # tests and lint.
+      - run: make check
 
       # Manifest schemas. `claude plugin validate .` reads the marketplace
-      # manifest only, so plugin.json is validated by path as well.
+      # manifest only, so each plugin.json is validated by path as well.
       - run: npm install -g @anthropic-ai/claude-code
       - run: claude plugin validate .
-      - run: claude plugin validate .claude-plugin/plugin.json
-
-      # The npx skills view of the same tree.
-      - run: npx --yes skills@latest add . --list
+      - run: claude plugin validate plugins/prp-core/.claude-plugin/plugin.json
+      - run: claude plugin validate plugins/github-project/.claude-plugin/plugin.json

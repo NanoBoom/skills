@@ -8,8 +8,14 @@ node_modules/
 # Worktrees created by prp-worktree, prp-spike, and prp-orchestrate
 .worktrees/
 
-# Python artifacts from the bundled uv scripts
+# Python artifacts from the bundled uv scripts and tools/
 __pycache__/
 *.pyc
 .venv/
 /temp
+
+# Generated harness artifacts. Regenerate with `make generate`; never edit them.
+/build/
+.prp/
+.pytest_cache/
+.ruff_cache/

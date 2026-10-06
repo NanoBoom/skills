@@ -1,14 +1,14 @@
 # PRP Core
 
-面向 Claude Code 的完整 PRP（Product Requirement Prompt）工作流自动化，以
-**Agent Skills** 的形式打包。
+完整的 PRP（Product Requirement Prompt）工作流自动化，以 **Agent Skills** 加专职
+子 agent 的形式打包，支持 Claude Code、Codex 和 Pi。
 
 [English](./README.md)
 
 本仓库同时是 `nanoboom` marketplace，发布两个插件。**`prp-core`** 是 PRP 工作
 流，下文绝大部分内容都在讲它。**`github-project`** 是一个更小的独立插件，用于把
 需求当作 GitHub Issue 来管理，它有自己的
-[README](./skills/github-project/README.md)，单独安装。两者互不依赖。
+[README](./plugins/github-project/README.md)，单独安装。两者互不依赖。
 
 > **本仓库是一个 fork。** 它 fork 自
 > [Wirasm/PRPs-agentic-eng](https://github.com/Wirasm/PRPs-agentic-eng) 的
@@ -27,10 +27,11 @@
 请求与 skill 的 description 匹配时，Claude 会自动加载）。维护者的 triage 和
 worklist 两个 skill 仅支持用户主动调用。
 
-> **Claude Code 是官方支持的运行环境。** 多数 skill 会派发
-> [`agents/`](./agents) 里的 `prp-core:<agent>` 子 agent，还有两个 skill 用到
-> [`hooks/`](./hooks) 里的 Stop hook。这两类东西都不会经由 `npx skills` 分发，
-> 后者只复制 `SKILL.md` 文件。要获得完整能力，请安装插件。
+> **要装上 agent，而不只是 skill。** 多数 skill 会派发
+> [`agents/`](./plugins/prp-core/agents) 里的 `prp-core:<agent>` 子 agent，还有两个
+> skill 用到 [`hooks/`](./plugins/prp-core/hooks) 里的 Stop hook。`npx skills` 只复
+> 制 `SKILL.md` 文件。请按[你所用环境的安装方式](#安装)把 agent 一起装上；
+> [docs/harnesses.md](./docs/harnesses.md)（英文）说明了每个环境保留和丢失什么。
 
 ## Skills
 
@@ -89,7 +90,7 @@ worklist 两个 skill 仅支持用户主动调用。
 安装。这三个 skill 只通过 `gh` CLI 与 GitHub 打交道，别的什么都不用：没有子
 agent，没有插件根路径，也不读取各自目录之外的任何文件。因此单独用
 `npx skills` 拿走一个 `SKILL.md` 仍然可用，这一点上面的 `prp-core` skill 做不
-到。完整文档见 [bucket README](./skills/github-project/README.md)。
+到。完整文档见 [插件 README](./plugins/github-project/README.md)。
 
 | Skill | 说明 |
 |-------|------|
@@ -100,7 +101,8 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 ## Agents
 
 供评审和规划 skill 使用的专职顾问型 agent。它们在设计上只出报告：只做分析和汇
-报，绝不修改文件或提交（这是由它们的 prompt 约束的，不是靠 `tools:` 白名单）。
+报，绝不修改文件或提交。每个 agent 都设置了 `disallowedTools: Write, Edit, NotebookEdit`，
+在 Codex 里对应成只读 sandbox，在 Pi 里对应成只读的工具列表。
 
 ### 代码库分析
 
@@ -124,7 +126,8 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 | `docs-impact-agent` | 会改变读者行为的错误文档或缺失文档 |
 
 评审 agent 由 `/prp-core:prp-review` 和 `/prp-core:prp-issue` 的评审阶段自动调
-用，也可以通过 Task 工具手动调用。
+用，也可以通过 Agent 工具手动调用。在 Claude Code 之外，每个 agent 的名字是
+`prp-core__<agent>`，安装后的 skill 里也是这样写的。
 
 ## 项目附属文档
 
@@ -159,8 +162,9 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 `.prp/state/prp-loop.state.json`：循环运行期间拦住记录为 owner 的那个会话；已派发的
 阶段子 agent 在运行时放行；连续三次续跑都没有状态变化时也放行。其他会话照常停止。
 
-两个 hook 都只随插件分发。如果你只是把 skill 直接复制进 `.claude/skills/`，它们都
-不会运行。
+两个 hook 都只随插件分发，并且是为 Claude Code 写的。如果你只是把 skill 直接复制进
+`.claude/skills/`，它们都不会运行。其他环境的情况见
+[docs/harnesses.md](./docs/harnesses.md#stop-hooks)。
 
 ## 工作流
 
@@ -200,18 +204,18 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 
 ## 安装
 
-有两条路可以进来，它们给到的东西并不一样。
+所有环境都从同一份源码 `plugins/<plugin>/` 安装，但不是每个环境都能拿到全部内容。
+细节见 [docs/harnesses.md](./docs/harnesses.md)。
 
-| | Claude Code 插件 | `npx skills add` |
-|---|---|---|
-| 装到本地的是什么 | skills、11 个 agent、Stop hooks | `SKILL.md` 文件及其配套目录 |
-| 调用方式 | `/prp-core:<name>`、`/github-project:<name>`，外加自动加载 | 取决于你的运行环境怎么处理 Agent Skill |
-| 安装单位 | 一次一个插件，`prp-core` 与 `github-project` 分开装 | 一整份扁平的 27 个 skill，或你点名的那几个 |
-| 更新 | 对着 marketplace 执行 `/plugin update` | `npx skills update` |
-| 适合场景 | 把 PRP 工作流当作整体使用 | 单独取一个自包含的 skill，或运行环境不是 Claude Code |
+| 环境 | 安装方式 | Skills | 11 个 agent | Stop hooks |
+|---|---|---|---|---|
+| Claude Code | 插件 marketplace | 有 | 有 | 有 |
+| Codex | clone 后 `make install-codex` | 有 | 有 | 无 |
+| Pi | clone 后 `make install-pi` | 有 | 需要 Pi 的 `subagent` 扩展 | 无 |
+| 任意 Agent Skills 环境 | `npx skills add` | 有 | 无 | 无 |
 
-如果你用 Claude Code，就装插件。只有当你想把某一个 skill 拿到别处用时，才该动
-`npx skills`。
+从 clone 安装需要 [`uv`](https://docs.astral.sh/uv/) 和 `make`。`git pull` 后再跑一次
+同一个 `make` 目标即可更新，`make uninstall-<harness>` 只删除它安装过的内容。
 
 ### Claude Code 插件（推荐）
 
@@ -290,64 +294,88 @@ claude plugin uninstall prp-core@nanoboom
 # 重启 Claude Code
 ```
 
-如果只想在单次会话里加载某棵工作树而不真的安装，用
-`claude --plugin-dir /absolute/path/to/skills`。`github-project` 插件对应的目录
-是它自己的 bucket：
-`--plugin-dir /absolute/path/to/skills/skills/github-project`。
+如果只想在单次会话里加载某个插件而不真的安装，用
+`claude --plugin-dir /absolute/path/to/skills/plugins/prp-core`，或
+`.../plugins/github-project`。
+
+### Codex
+
+```bash
+git clone https://github.com/NanoBoom/skills && cd skills
+make install-codex
+```
+
+需要 `PATH` 上有 Codex CLI。它会生成 `build/codex/` 作为一个本地 Codex marketplace，
+用 `codex plugin marketplace add` 注册为 `nanoboom`，再用 `codex plugin add` 逐个安
+装其中的插件。skill 里的派发名已经改写成 `prp-core__<agent>`，超过 Codex 8000 字节
+提示上限的 skill 会被拆分，内容不会被截掉。Codex 插件不能携带自定义 agent，所以 11
+个 agent 以 `prp-core__<agent>.toml` 的形式链接进 `${CODEX_HOME:-~/.codex}/agents/`，
+各自带上模型、推理强度和只读 sandbox。`ONLY=agents` 或 `ONLY=plugins` 只装其中一半（配合 `PROJECT` 时可选 `ONLY=skills|agents`）。
+
+Codex 会把安装的插件复制进自己的缓存，所以 `git pull` 后要重新运行
+`make install-codex`。如果之前把 `NanoBoom/skills` 添加成了 Codex marketplace，先移除
+它（`codex plugin marketplace remove nanoboom`）：这种方式不受支持，因为 Codex 会原样
+读取 Claude Code 格式的插件。也不要再混用 `npx skills` 装的副本，否则 Codex 会把这些
+skill 列两遍。
+
+### Pi
+
+```bash
+git clone https://github.com/NanoBoom/skills && cd skills
+make install-pi
+```
+
+这会把 skill、agent、prompt 模板和扩展链接进 `~/.pi/agent/`（或
+`$PI_CODING_AGENT_DIR`）。Pi 核心没有子 agent，这些 agent 要配合 Pi 的参考扩展
+`subagent` 或兼容扩展才能加载。agent 使用从 Claude 别名映射过来的 Anthropic 模型；
+要换 provider，修改 [`tools/adapters/capabilities.py`](./tools/adapters/capabilities.py)
+里的 `MODEL_ALIASES` 后重新运行。
+
+### 选择插件，或安装到项目
+
+`make install-codex` 和 `make install-pi` 都支持下面这些变量，
+`make uninstall-<harness>` 支持 `PLUGINS` 和 `PROJECT`：
+
+```bash
+make install-pi PLUGINS=github-project               # 只装部分插件（默认全部）
+make install-pi PROJECT=/abs/path/to/app             # 装进项目的 .pi/，而不是 ~/.pi/agent
+make install-codex PROJECT=/abs/path/to/app COPY=1   # 拷贝真实文件，项目可以提交
+make uninstall-pi PROJECT=/abs/path/to/app
+```
+
+装到项目时，Codex 会在 `<project>/.codex/` 拿到 skill 和 agent，但不安装插件，所以没有
+Codex 的 hooks 和 MCP 服务。两个工具都要在你信任该项目之后才会加载项目里的文件。不加
+`COPY=1` 时项目里放的是指向你本机 clone 的软链接，只在你自己的机器上有效。细节见
+[docs/harnesses.md](./docs/harnesses.md#install-options)。
 
 ### `npx skills add`（任意支持 Agent Skills 的环境）
 
-这条路把 skill 复制进任何能理解 Agent Skills 的运行环境。不需要 marketplace，也
-不需要 Claude Code。
+这会把 skill 复制进任何理解 Agent Skills 的环境，不需要 marketplace，也不需要
+clone：
 
 ```bash
 npx skills@latest add NanoBoom/skills            # 交互式挑选
-npx skills@latest add NanoBoom/skills --list     # 先看看里面有什么
-npx skills@latest add NanoBoom/skills --all      # 全部 skill、全部 agent，不再询问
-```
-
-只取一个 skill，这才是这条路真正擅长的用法：
-
-```bash
+npx skills@latest add NanoBoom/skills --list     # 先看看有什么
 npx skills@latest add NanoBoom/skills --skill github-project-manage
 npx skills@latest add NanoBoom/skills --skill prp-technical-writing --global
 ```
 
-常用参数：`--global` 装在用户级而不是当前项目，`--agent '*'` 面向检测到的每一个
-运行环境，`--copy` 写入真实文件而不是符号链接，`-y` 跳过确认。之后可以用
-`npx skills list`、`npx skills update` 和 `npx skills remove` 管理已取用的
-skill。
+常用参数：`--global` 装到用户级而不是当前项目，`--agent '*'` 面向所有检测到的环
+境，`--copy` 写入真实文件而不是符号链接，`-y` 跳过提示。之后可以用
+`npx skills list`、`npx skills update`、`npx skills remove` 管理装过的内容。
 
-#### 你能得到什么，得不到什么
-
-`npx skills` 是靠扫描 `skills/` 目录来发现 skill 的，所以它会找到两个 bucket 里
-全部 27 个，并且不看插件清单。它只复制 `SKILL.md` 文件及其配套目录，本仓库的其
-余内容一概不复制。它**不会**带上 [`agents/`](./agents) 里的 `prp-core:<agent>`
-子 agent，也不会带上 [`hooks/`](./hooks) 里的 Stop hook。
-
-于是：
-
-- `github-project` 的三个 skill 在设计上就是自包含的。它们只通过 `gh` CLI 与
-  GitHub 打交道，不读取自身目录之外的任何文件，所以这条路上什么都不会丢。
-- 多数 `prp-core` skill 会派发子 agent 或读取 `${CLAUDE_PLUGIN_ROOT}`。用这种方
-  式取走后它们会降级：skill 本身仍能加载，但它要委派出去的工作无处可去。这条路
-  请用来取单个 skill，而不是取整套工作流。
-
-取来的 skill 会归在 `General` 这个标题下，而不是它所在 bucket 的名字。这个标题
-来自根目录的 `.claude-plugin/plugin.json`，纯属显示效果。
-
-#### 用符号链接挂载工作树
-
-面向维护者：[`scripts/link-skills.sh`](./scripts/link-skills.sh) 会把
-`deprecated/` 之外的每个 skill 都符号链接进 `~/.claude/skills` 和
-`~/.agents/skills`，这样在工作树里改动会立即生效。
+它只复制 `SKILL.md` 文件及其目录，别的都不带，所以**不会**带上 agent 和 Stop
+hook。三个 `github-project` skill 在设计上就是自包含的，什么都不会丢。多数
+`prp-core` skill 会派发子 agent，这样拿走会降级：skill 能加载，但它要委派的工作
+无处可去。这条路适合单独取一个 skill；要用整个工作流，请走上面对应环境的安装方式。
 
 ## 环境要求
 
-- 已安装 Claude Code
+- 上面任一环境
 - 已配置 Git；PR 与 issue 操作需要 GitHub CLI（`gh`）
 - [`uv`](https://docs.astral.sh/uv/)，用于运行内置的 `prp-loop` 状态机
-  （`skills/prp-core/prp-loop/scripts/prp_loop.py`）
+  （`plugins/prp-core/skills/prp-loop/scripts/prp_loop.py`）、`prp-worktree` 脚本，以及
+  `make` 安装目标
 
 ## 产物
 
@@ -403,8 +431,8 @@ store 永远不会被提交：它会写一个内容为 `*` 的 `.gitignore`，�
 
 ## 参与贡献
 
-[CLAUDE.md](./CLAUDE.md) 是贡献者契约：目录布局、不变量、如何新增 skill，以及如
-何验证一次改动。
+[AGENTS.md](./AGENTS.md) 是贡献者契约：目录布局、不变量、如何新增 skill、agent、
+插件或运行环境，以及如何验证一次改动。`make help` 列出维护用的目标。
 
 ## 许可
 

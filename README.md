@@ -1,14 +1,14 @@
 # PRP Core
 
-Complete PRP (Product Requirement Prompt) workflow automation for Claude Code,
-packaged as **Agent Skills**.
+Complete PRP (Product Requirement Prompt) workflow automation, packaged as
+**Agent Skills** with specialist subagents, for Claude Code, Codex, and Pi.
 
 [中文文档](./README.zh-CN.md)
 
 This repository is also the `nanoboom` marketplace, and it ships two plugins.
 **`prp-core`** is the PRP workflow and everything below is about it.
 **`github-project`** is a smaller, independent plugin for running requirements
-as GitHub Issues; it has its own [README](./skills/github-project/README.md) and
+as GitHub Issues; it has its own [README](./plugins/github-project/README.md) and
 installs separately. Neither depends on the other.
 
 > **Forked from upstream.** This repository is a fork of the `prp-core` plugin
@@ -30,10 +30,12 @@ Everything here ships as **skills** (not slash commands). Most are both
 loads them automatically when a request matches their description). The
 maintainer triage and worklist skills are user-invocable only.
 
-> **Claude Code is the supported harness.** Most skills dispatch the
-> `prp-core:<agent>` subagents in [`agents/`](./agents), and two use the Stop
-> hooks in [`hooks/`](./hooks). Neither travels through `npx skills`, which copies
-> `SKILL.md` files only. Install the plugin to get the whole thing.
+> **Install the agents, not just the skills.** Most skills dispatch the
+> `prp-core:<agent>` subagents in [`agents/`](./plugins/prp-core/agents), and two
+> use the Stop hooks in [`hooks/`](./plugins/prp-core/hooks). `npx skills` copies
+> `SKILL.md` files only. Use the [route for your harness](#installation) to get
+> the agents too; [docs/harnesses.md](./docs/harnesses.md) says what each one
+> keeps and loses.
 
 ## Skills
 
@@ -93,7 +95,7 @@ The `github-project` plugin, installed separately with
 the `gh` CLI and nothing else: no subagent, no plugin root path, no file outside
 each skill's own directory. A single `SKILL.md` taken through `npx skills` still
 works, which is not true of the `prp-core` skills above. Full documentation is
-in the [bucket README](./skills/github-project/README.md).
+in the [plugin README](./plugins/github-project/README.md).
 
 | Skill | Description |
 |-------|-------------|
@@ -105,7 +107,8 @@ in the [bucket README](./skills/github-project/README.md).
 
 Specialized, advisory agents used by the review and planning skills. They are
 report-only by design: they analyze and report findings but never modify files or
-commit (enforced by their prompts, not by a `tools:` allowlist).
+commit. Each one sets `disallowedTools: Write, Edit, NotebookEdit`, which Codex
+gets as a read-only sandbox and Pi as a read-only tool list.
 
 ### Codebase analysis
 
@@ -129,7 +132,8 @@ commit (enforced by their prompts, not by a `tools:` allowlist).
 | `docs-impact-agent` | False or missing documentation that changes reader behavior |
 
 Review agents are invoked automatically by `/prp-core:prp-review` and the review
-stage of `/prp-core:prp-issue`, or manually via the Task tool.
+stage of `/prp-core:prp-issue`, or manually via the Agent tool. Outside Claude Code
+each agent is named `prp-core__<agent>`, and the installed skills say so.
 
 ## Project sidecars
 
@@ -168,8 +172,9 @@ recorded as the loop's owner while the loop is running, releases it while a
 dispatched stage subagent runs, and lets it stop after three continuations with no
 state change. Every other session stops normally.
 
-Both hooks ship only with the plugin. If you copy the skills into `.claude/skills/`
-directly, neither runs.
+Both hooks ship only with the plugin and are written for Claude Code. If you copy
+the skills into `.claude/skills/` directly, neither runs. See
+[docs/harnesses.md](./docs/harnesses.md#stop-hooks) for other harnesses.
 
 ## Workflows
 
@@ -209,20 +214,22 @@ repeat /prp-core:prp-plan for the next phase
 
 ## Installation
 
-There are two ways in, and they do not deliver the same thing.
+Every harness installs from the same source, `plugins/<plugin>/`, but not every
+harness can take every part of it. [docs/harnesses.md](./docs/harnesses.md) has
+the details.
 
-| | Claude Code plugin | `npx skills add` |
-|---|---|---|
-| What lands | skills, the 11 agents, the Stop hooks | `SKILL.md` files and their supporting directories |
-| Invocation | `/prp-core:<name>`, `/github-project:<name>`, plus automatic loading | whatever your harness does with an Agent Skill |
-| Unit of install | one plugin at a time, `prp-core` and `github-project` separately | one flat set of 27 skills, or the ones you name |
-| Updates | `/plugin update` against the marketplace | `npx skills update` |
-| Best for | the PRP workflow as a whole | one self-contained skill, or a harness that is not Claude Code |
+| Harness | Route | Skills | The 11 agents | Stop hooks |
+|---|---|---|---|---|
+| Claude Code | plugin marketplace | yes | yes | yes |
+| Codex | a clone, `make install-codex` | yes | yes | no |
+| Pi | a clone, `make install-pi` | yes | with Pi's `subagent` extension | no |
+| any Agent Skills harness | `npx skills add` | yes | no | no |
 
-If you use Claude Code, install the plugin. Reach for `npx skills` when you want
-a single skill somewhere else.
+The clone routes need [`uv`](https://docs.astral.sh/uv/) and `make`. After
+`git pull`, rerun the same `make` target to update, and `make uninstall-<harness>`
+removes exactly what it installed.
 
-### Claude Code plugin (recommended)
+### Claude Code (recommended)
 
 Register the marketplace once, then install either plugin from it. The two are
 independent and neither requires the other.
@@ -233,7 +240,7 @@ independent and neither requires the other.
 /plugin install github-project@nanoboom   # optional, independent
 ```
 
-Restart Claude Code so the skills, agents, and hook load.
+Restart Claude Code so the skills, agents, and hooks load.
 
 The same thing works outside the REPL, which is what you want in a script or a
 Dockerfile:
@@ -302,24 +309,73 @@ you are done:
 # Restart Claude Code
 ```
 
-To load a tree for one session without installing anything, use
-`claude --plugin-dir /absolute/path/to/skills`. For the `github-project` plugin
-the directory is the bucket, `--plugin-dir /absolute/path/to/skills/skills/github-project`.
+To load one plugin for one session without installing anything, use
+`claude --plugin-dir /absolute/path/to/skills/plugins/prp-core`, or
+`.../plugins/github-project`.
+
+### Codex
+
+```bash
+git clone https://github.com/NanoBoom/skills && cd skills
+make install-codex
+```
+
+This needs the Codex CLI on your `PATH`. It generates `build/codex/`, a local
+Codex marketplace, registers it as `nanoboom` with `codex plugin marketplace add`,
+and installs each plugin from it with `codex plugin add`. The skills arrive with
+dispatch names rewritten to `prp-core__<agent>`, and any skill over Codex's
+8000-byte prompt limit is split so nothing is cut off. A Codex plugin cannot
+carry custom agents, so the 11 agents are linked into
+`${CODEX_HOME:-~/.codex}/agents/` as `prp-core__<agent>.toml`, each with its
+model, reasoning effort, and a read-only sandbox. `ONLY=agents` or
+`ONLY=plugins` installs one half (`ONLY=skills|agents` with `PROJECT`).
+
+Codex copies an installed plugin into its own cache, so rerun `make install-codex`
+after `git pull`. If you added `NanoBoom/skills` as a Codex marketplace before,
+remove it first (`codex plugin marketplace remove nanoboom`): that route is not
+supported, because Codex then reads the Claude Code plugin unchanged. Do not mix
+in copies from `npx skills` either, or Codex lists those skills twice.
+
+### Pi
+
+```bash
+git clone https://github.com/NanoBoom/skills && cd skills
+make install-pi
+```
+
+This links skills, agents, prompt templates, and extensions into `~/.pi/agent/`
+(or `$PI_CODING_AGENT_DIR`). Pi core has no subagents; the agents load with Pi's
+reference `subagent` extension or a compatible one. Agents run on Anthropic
+models mapped from their Claude aliases; edit `MODEL_ALIASES` in
+[`tools/adapters/capabilities.py`](./tools/adapters/capabilities.py) and rerun
+for another provider.
+
+### Choose plugins, or install into a project
+
+Both `make install-codex` and `make install-pi` take these variables, and
+`make uninstall-<harness>` takes `PLUGINS` and `PROJECT`:
+
+```bash
+make install-pi PLUGINS=github-project               # only some plugins (default: all)
+make install-pi PROJECT=/abs/path/to/app             # into the project's .pi/, not ~/.pi/agent
+make install-codex PROJECT=/abs/path/to/app COPY=1   # real copies the project can commit
+make uninstall-pi PROJECT=/abs/path/to/app
+```
+
+Into a project, Codex gets skills and agents in `<project>/.codex/`, but no
+plugin, so no Codex hooks or MCP servers. Both tools load a project's files
+only after you trust the project. Without `COPY=1` the project gets symlinks
+into your clone, which work only on your machine.
+[docs/harnesses.md](./docs/harnesses.md#install-options) has the details.
 
 ### `npx skills add` (any Agent Skills harness)
 
-This copies skills into a harness that understands Agent Skills. No marketplace,
-no Claude Code required.
+This copies skills into any harness that understands Agent Skills, with no
+marketplace and no clone:
 
 ```bash
 npx skills@latest add NanoBoom/skills            # pick interactively
 npx skills@latest add NanoBoom/skills --list     # see what is there first
-npx skills@latest add NanoBoom/skills --all      # every skill, every agent, no prompts
-```
-
-Take a single skill, which is the case this path is actually good at:
-
-```bash
 npx skills@latest add NanoBoom/skills --skill github-project-manage
 npx skills@latest add NanoBoom/skills --skill prp-technical-writing --global
 ```
@@ -329,38 +385,18 @@ project, `--agent '*'` targets every detected harness, `--copy` writes real file
 instead of symlinks, and `-y` skips the prompts. Later, `npx skills list`,
 `npx skills update`, and `npx skills remove` manage what you took.
 
-#### What you get and what you do not
-
-`npx skills` discovers skills by scanning `skills/`, so it finds all 27 across
-both buckets and ignores the plugin manifests. It copies `SKILL.md` files and
-their supporting directories, and nothing else in this repository. It does
-**not** bring the `prp-core:<agent>` subagents in [`agents/`](./agents) or the
-Stop hooks in [`hooks/`](./hooks).
-
-So:
-
-- The three `github-project` skills are self-contained by design. They talk to
-  GitHub through the `gh` CLI and read nothing outside their own directory, so
-  they lose nothing here.
-- Most `prp-core` skills dispatch subagents or read `${CLAUDE_PLUGIN_ROOT}`.
-  Taken this way they degrade: the skill still loads, but the work it delegates
-  has nowhere to go. Use this path for an individual skill, not for the workflow
-  as a whole.
-
-Skills arrive under a `General` heading rather than their bucket name. The
-heading comes from the root `.claude-plugin/plugin.json` and is cosmetic.
-
-#### Symlink a working tree
-
-For maintainers, [`scripts/link-skills.sh`](./scripts/link-skills.sh) symlinks
-every skill outside `deprecated/` into `~/.claude/skills` and `~/.agents/skills`,
-so edits in the tree take effect immediately.
+It copies `SKILL.md` files and their directories and nothing else, so it does
+**not** bring the agents or the Stop hooks. The three `github-project` skills are
+self-contained by design and lose nothing. Most `prp-core` skills dispatch
+subagents and degrade: the skill loads, but the work it delegates has nowhere to
+go. Use this route for a single skill; for the workflow, use your harness's
+route above.
 
 ## Requirements
 
-- Claude Code installed
+- One of the harnesses above
 - Git configured; GitHub CLI (`gh`) for PR/issue operations
-- [`uv`](https://docs.astral.sh/uv/), which runs the bundled `prp-loop` state machine (`skills/prp-core/prp-loop/scripts/prp_loop.py`)
+- [`uv`](https://docs.astral.sh/uv/), which runs the bundled `prp-loop` state machine (`plugins/prp-core/skills/prp-loop/scripts/prp_loop.py`), the `prp-worktree` script, and the `make` install targets
 
 ## Artifacts
 
@@ -408,8 +444,9 @@ Plans are durable implementation contracts. Implementation results, validation, 
 
 ## Contributing
 
-[CLAUDE.md](./CLAUDE.md) is the contributor contract: the layout, the invariants,
-how to add a skill, and how to verify a change.
+[AGENTS.md](./AGENTS.md) is the contributor contract: the layout, the invariants,
+how to add a skill, an agent, a plugin, or a harness, and how to verify a change.
+`make help` lists the maintainer targets.
 
 ## License
 

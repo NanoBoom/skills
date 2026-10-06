@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "kitchen-codex-echo": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/hooks/codex-stop.sh"
+    }
+  }
+}
