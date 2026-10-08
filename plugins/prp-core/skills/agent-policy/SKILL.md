@@ -83,7 +83,7 @@ the agent is listed:
   Write `n/a` for a model without effort levels.
 
 Examples: `codebase-analyst:sonnet:high`, `root-cause-analyzer:opus:xhigh`,
-`write-auth-plan:opus:high`, `find-config-callers:haiku:n/a`.
+`write-auth-plan:opus:high`, `find-config-callers:haiku:low`.
 
 The reference says which field of each launch carries the name.
 

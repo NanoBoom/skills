@@ -27,7 +27,7 @@ MODEL_ALIASES: dict[str, dict[str, str | None]] = {
         "fable": "anthropic/claude-fable-5-1",
         "opus": "anthropic/claude-opus-5-5",
         "sonnet": "anthropic/claude-sonnet-5-5",
-        "haiku": "anthropic/claude-haiku-4-5",
+        "haiku": "anthropic/claude-haiku-5-5",
         "inherit": None,
     },
 }

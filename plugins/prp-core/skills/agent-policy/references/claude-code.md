@@ -1,6 +1,6 @@
 # Claude Code
 
-Checked against the Claude Code docs on 2026-09-30. Pass aliases, which
+Checked against the Claude Code docs on 2026-10-08. Pass aliases, which
 resolve to the current generation. Do not pin model versions.
 
 Sources: [model configuration](https://code.claude.com/docs/en/model-config),
@@ -12,8 +12,8 @@ Sources: [model configuration](https://code.claude.com/docs/en/model-config),
 
 | Task type | Model | Effort | Development scenarios |
 | --- | --- | --- | --- |
-| Search | `haiku` | n/a | Find where a function is defined, list every caller of an API, locate the config that sets a flag |
-| Summarize | `haiku` | n/a | Condense a CI log to the failing step, extract endpoints from an OpenAPI file, summarize a long issue thread |
+| Search | `haiku` | `low` | Find where a function is defined, list every caller of an API, locate the config that sets a flag |
+| Summarize | `haiku` | `low` | Condense a CI log to the failing step, extract endpoints from an OpenAPI file, summarize a long issue thread |
 | Web research | `sonnet` | `low` | Check a library's current API, confirm platform behavior, find how others solved a problem |
 | Mechanical edit | `sonnet` | `low` | Rename a symbol across files, bump dependency versions, apply a diff the brief spells out |
 | Code tracing | `sonnet` | `medium` | Trace a request from handler to database, map what a config flag changes, explain a module before editing it |
@@ -34,14 +34,17 @@ before concluding.
 
 | Alias | Resolves to | Input / output per MTok | Cost vs `opus` |
 | --- | --- | --- | --: |
-| `haiku` | Haiku 4.5 | $1 / $5 | 0.25 |
+| `haiku` | Haiku 5.5 | $0.10 / $0.50; $0.50 / $2.50 for a prompt over 100K tokens | 0.025; 0.125 |
 | `sonnet` | Sonnet 5.5 | $2 / $10 | 0.5 |
 | `opus` | Opus 5.5 | $4 / $20 | 1 |
 | `fable` | Fable 5.1 | $10 / $50 | 2.5 |
 
-On Bedrock, Google Cloud, Foundry, and Claude Platform on AWS, `sonnet` and
-`opus` can resolve to older models. Read the resolved model from the Agent
-tool result.
+A `haiku` agent whose prompt grows past 100K tokens pays five times the base
+rate, still a quarter of `sonnet`.
+
+On Bedrock, Google Cloud, Foundry, and Claude Platform on AWS, `haiku`
+resolves to Haiku 4.5, and `sonnet` and `opus` can resolve to older models.
+Read the resolved model from the Agent tool result.
 
 ## Effort
 
@@ -50,12 +53,13 @@ Levels: `low`, `medium`, `high`, `xhigh`, `max`. Use `max` only after an
 
 | Model | Levels | Default when unset |
 | --- | --- | --- |
-| Opus 5.5, Sonnet 5.5 | all five | `medium` |
+| Opus 5.5, Sonnet 5.5, Haiku 5.5 | all five | `medium` |
 | Fable 5.1 | all five | `high` |
-| Haiku 4.5 | not listed as supporting effort | n/a |
+| Haiku 4.5, where `haiku` resolves to it | none | n/a |
 
-A `sonnet` or `opus` row that says `high` runs one step lower unless something
-sets `high` explicitly.
+A `haiku`, `sonnet`, or `opus` row runs at `medium` unless something sets the
+row's effort explicitly: a `haiku` row at `low` runs one step higher, and a
+`sonnet` or `opus` row at `high` one step lower.
 
 ## Passing model and effort
 
@@ -110,8 +114,9 @@ before you write it, taking the first that applies:
 1. `CLAUDE_CODE_EFFORT_LEVEL`, when set.
 2. The level the user chose with `/effort` or `--effort`, or set in
    `modelSettings.<model-id>.effort`.
-3. The agent's model's default from the Effort table: `medium` for `sonnet`
-   and `opus`, `high` for `fable`.
+3. The agent's model's default from the Effort table: `medium` for `haiku`,
+   `sonnet`, and `opus`, `high` for `fable`. Write `n/a` when `haiku`
+   resolves to Haiku 4.5.
 
 A `general-purpose` agent on `opus` for a Planning and design task, in a
 session with no effort set, is `write-auth-plan:opus:medium`, not

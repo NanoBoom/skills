@@ -29,8 +29,9 @@ Sources: [models](https://learn.chatgpt.com/docs/models),
 | High-stakes second opinion | `gpt-6-astra` | `low` | Re-review an auth or payment diff after a Sol review stayed uncertain |
 | Critical change | `gpt-6-astra` | `high` | Change a permission model, write an irreversible migration, audit a security boundary |
 
-Luna costs one twentieth of Sol, so the table leans on it further than the
-Claude Code table leans on `haiku`. When a Luna agent misses on a test,
+Luna costs one twentieth of Sol, and the table gives it web research, edits,
+tests, and bounded implementation, which the Claude Code table keeps off
+`haiku`. When a Luna agent misses on a test,
 reproduction, or bounded implementation task, retry on `gpt-6.1-sol` at
 `medium`.
 

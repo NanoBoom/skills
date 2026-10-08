@@ -99,7 +99,7 @@ authoritative; this table mirrors it.
 | `fable` | `gpt-6-astra` | `anthropic/claude-fable-5-1` |
 | `opus` | `gpt-6.1-sol` | `anthropic/claude-opus-5-5` |
 | `sonnet` | `gpt-6.1-sol` | `anthropic/claude-sonnet-5-5` |
-| `haiku` | `gpt-6-luna` | `anthropic/claude-haiku-4-5` |
+| `haiku` | `gpt-6-luna` | `anthropic/claude-haiku-5-5` |
 | `inherit` | field omitted | field omitted |
 
 The Codex column follows the `agent-policy` skill's
