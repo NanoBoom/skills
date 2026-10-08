@@ -19,3 +19,5 @@ __pycache__/
 .prp/
 .pytest_cache/
 .ruff_cache/
+hack/
+TODO/
