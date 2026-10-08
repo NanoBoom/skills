@@ -13,6 +13,8 @@ Assume the reader is a tired engineer.
 Restate the previous response. Same content, plainer words. This is a rewrite, not a second
 attempt at the answer, so do not re-analyze anything or go looking for more.
 
+Apply the `response-policy` skill at full strength, in the language the user wrote in.
+
 Cut the jargon. Short sentences, the shortest accurate word, one name per thing. Talk like one
 person explaining something to another.
 

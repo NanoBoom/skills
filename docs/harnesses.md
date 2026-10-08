@@ -197,11 +197,14 @@ Both harnesses load a project's `.codex/` or `.pi/` only after you trust the
 project: Codex asks when it starts in an untrusted project, and Pi needs `/trust`,
 or `--approve` in print mode.
 
-## Stop hooks
+## Hooks
 
-`prp-loop-stop.sh` and `prp-research-team-stop.sh` are Claude Code Stop hooks
-in `plugins/prp-core/hooks/hooks.json`. `prp-core` has no `harness/` directory,
-so neither Codex nor Pi runs them. `prp-loop-stop.sh` would do nothing there
-anyway: the loop records its owner from `CLAUDE_CODE_SESSION_ID`, so a loop
-started elsewhere has no owner for the hook to hold. A Codex or Pi version of
-either hook would go in `plugins/prp-core/harness/`.
+`prp-loop-stop.sh` and `prp-research-team-stop.sh` are Claude Code Stop hooks,
+and the opt-in `prp-response-policy-prompt.sh` is a Claude Code
+UserPromptSubmit hook, all in `plugins/prp-core/hooks/hooks.json`. `prp-core`
+has no `harness/` directory, so neither Codex nor Pi runs them. `prp-loop-stop.sh`
+would do nothing there anyway: the loop records its owner from
+`CLAUDE_CODE_SESSION_ID`, so a loop started elsewhere has no owner for the hook
+to hold. Without the prompt hook, `response-policy` still applies at every PRP
+skill's report step, because each of those skills names it. A Codex or Pi
+version of any of these hooks would go in `plugins/prp-core/harness/`.

@@ -63,8 +63,9 @@ or changing its meaning.
 
 ## Handoff
 
-Report the documents reviewed or changed and the evidence used to verify them. Do not commit or open
-a pull request unless the operator asks.
+Report the documents reviewed or changed and the evidence used to verify them. Write the handoff
+under the `response-policy` skill; the documents themselves follow this skill's rules. Do not
+commit or open a pull request unless the operator asks.
 
 ## Resources
 

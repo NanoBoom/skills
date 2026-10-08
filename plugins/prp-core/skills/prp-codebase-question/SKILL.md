@@ -316,6 +316,8 @@ If `--follow-up` flag and existing research file:
 
 ## Phase 6: OUTPUT - Present to User
 
+Write this summary under the `response-policy` skill.
+
 ```markdown
 ## Research Complete
 

@@ -74,6 +74,7 @@ investigation with the planning or implementation owner; enforce only its gate h
 At the first gate, present the proposed base branch, a table of workstream, engine, dependencies, and
 parallel group, plus proposed Standing Decisions. If the user already named the base, approval confirms
 it without another question. Do not launch before approval. That approval covers the batch.
+Write the gate, and every later message to the user, under the `response-policy` skill.
 
 ## 2. Initialize the run
 
@@ -166,8 +167,8 @@ Fill the template's Final handoff from verified state. Put shipped outcomes and 
 decisions, incomplete or handed-back work, risks, cleanup, and worthwhile follow-ups at the end. Use
 stable workstream and PR identifiers, write for a tired engineer, and omit empty ceremony.
 
-Send the same standalone handoff to the user. Do not rely on progress messages or the Event log for
-anything the user needs to know.
+Send the same standalone handoff to the user, written under the `response-policy` skill. Do not
+rely on progress messages or the Event log for anything the user needs to know.
 
 ## Recovery
 

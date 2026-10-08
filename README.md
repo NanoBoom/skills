@@ -79,6 +79,7 @@ maintainer triage and worklist skills are user-invocable only.
 | `/prp-core:prp-worktree` | Create, list, and safely tear down isolated checkouts under `.worktrees/` |
 | `/prp-core:prp-worklist` | Render a repository's open work so the maintainer can see what to take next. User-invocable only |
 | `/prp-core:agent-policy` | Pick the model and effort for every agent at launch by task type, to save tokens. Ships lookup tables for Claude Code and Codex |
+| `/prp-core:response-policy` | Write every reply to the user in the user's language, conclusion first, under controlled writing: ASD-STE100 at 80% for English, controlled technical Chinese for Chinese. Every reporting skill applies it |
 
 ### Authoring
 
@@ -156,7 +157,7 @@ direction is a scope question for the operator, not a defect the author can fix 
 
 ## Hooks
 
-The plugin ships two Stop hooks.
+The plugin ships two Stop hooks and one opt-in UserPromptSubmit hook.
 
 `hooks/prp-research-team-stop.sh` validates `prp-research-team` output. The skill writes its plan path to a
 sentinel file in `.prp/state/prp-research-team.state`; on Stop,
@@ -172,9 +173,22 @@ recorded as the loop's owner while the loop is running, releases it while a
 dispatched stage subagent runs, and lets it stop after three continuations with no
 state change. Every other session stops normally.
 
-Both hooks ship only with the plugin and are written for Claude Code. If you copy
-the skills into `.claude/skills/` directly, neither runs. See
-[docs/harnesses.md](./docs/harnesses.md#stop-hooks) for other harnesses.
+`hooks/prp-response-policy-prompt.sh` is off by default. Every PRP skill that
+reports to you already applies the `response-policy` skill at its report step;
+this hook extends the policy to every other reply. Turn it on by setting
+`PRP_RESPONSE_POLICY` to `1` in the `env` block of your Claude Code settings:
+
+```json
+{ "env": { "PRP_RESPONSE_POLICY": "1" } }
+```
+
+When it is on, each prompt gets one short reminder, under 100 tokens: reply in
+your language, conclusion first, under controlled writing. It does not read the
+prompt. Remove the variable to turn it off.
+
+All three hooks ship only with the plugin and are written for Claude Code. If you
+copy the skills into `.claude/skills/` directly, none of them runs. See
+[docs/harnesses.md](./docs/harnesses.md#hooks) for other harnesses.
 
 ## Workflows
 
@@ -218,7 +232,7 @@ Every harness installs from the same source, `plugins/<plugin>/`, but not every
 harness can take every part of it. [docs/harnesses.md](./docs/harnesses.md) has
 the details.
 
-| Harness | Route | Skills | The 11 agents | Stop hooks |
+| Harness | Route | Skills | The 11 agents | Hooks |
 |---|---|---|---|---|
 | Claude Code | plugin marketplace | yes | yes | yes |
 | Codex | a clone, `make install-codex` | yes | yes | no |
@@ -262,7 +276,7 @@ claude plugin list
 claude plugin details prp-core@nanoboom
 ```
 
-`details` prints the component inventory: 24 skills, 11 agents, 2 hooks for
+`details` prints the component inventory: 25 skills, 11 agents, 3 hooks for
 `prp-core`, and 3 skills for `github-project`. In-session, `/plugin` shows both
 under the `nanoboom` marketplace, and typing `/prp-core:` completes against the
 installed skills.
@@ -386,7 +400,7 @@ instead of symlinks, and `-y` skips the prompts. Later, `npx skills list`,
 `npx skills update`, and `npx skills remove` manage what you took.
 
 It copies `SKILL.md` files and their directories and nothing else, so it does
-**not** bring the agents or the Stop hooks. The three `github-project` skills are
+**not** bring the agents or the hooks. The three `github-project` skills are
 self-contained by design and lose nothing. Most `prp-core` skills dispatch
 subagents and degrade: the skill loads, but the work it delegates has nowhere to
 go. Use this route for a single skill; for the workflow, use your harness's

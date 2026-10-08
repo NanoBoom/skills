@@ -75,6 +75,7 @@ worklist 两个 skill 仅支持用户主动调用。
 | `/prp-core:prp-worktree` | 在 `.worktrees/` 下创建、列出并安全拆除隔离的检出 |
 | `/prp-core:prp-worklist` | 渲染一个仓库上待办的工作，让维护者看清下一步该接哪件。仅用户主动调用 |
 | `/prp-core:agent-policy` | 启动 agent 时按任务类型选定 model 和 effort，以节省 token。附 Claude Code 与 Codex 的速查表 |
+| `/prp-core:response-policy` | 给用户的每条回复都用用户的语言、先给结论，并遵守受控写作规则：英文用 ASD-STE100（80% 达标），中文用受控技术中文。所有需要汇报的 skill 都会应用它 |
 
 ### 撰写
 
@@ -150,7 +151,7 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 
 ## Hooks
 
-插件带两个 Stop hook。
+插件带两个 Stop hook 和一个需要手动开启的 UserPromptSubmit hook。
 
 `hooks/prp-research-team-stop.sh` 用于校验 `prp-research-team` 的输出。该 skill 会把它的计划路径写进
 `.prp/state/prp-research-team.state` 这个哨兵文件；Stop 时 hook
@@ -162,9 +163,20 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 `.prp/state/prp-loop.state.json`：循环运行期间拦住记录为 owner 的那个会话；已派发的
 阶段子 agent 在运行时放行；连续三次续跑都没有状态变化时也放行。其他会话照常停止。
 
-两个 hook 都只随插件分发，并且是为 Claude Code 写的。如果你只是把 skill 直接复制进
+`hooks/prp-response-policy-prompt.sh` 默认关闭。每个需要向你汇报的 PRP skill 在汇报这一步
+已经应用 `response-policy` skill；这个 hook 把同一套规则扩展到其他所有回复。开启方法：在
+Claude Code 设置的 `env` 块里把 `PRP_RESPONSE_POLICY` 设为 `1`：
+
+```json
+{ "env": { "PRP_RESPONSE_POLICY": "1" } }
+```
+
+开启后，每条 prompt 会附带一条不到 100 token 的简短提醒：用你的语言回复、先给结论、遵守
+受控写作规则。它不读取 prompt 内容。删掉这个变量即可关闭。
+
+三个 hook 都只随插件分发，并且是为 Claude Code 写的。如果你只是把 skill 直接复制进
 `.claude/skills/`，它们都不会运行。其他环境的情况见
-[docs/harnesses.md](./docs/harnesses.md#stop-hooks)。
+[docs/harnesses.md](./docs/harnesses.md#hooks)。
 
 ## 工作流
 
@@ -207,7 +219,7 @@ agent，没有插件根路径，也不读取各自目录之外的任何文件。
 所有环境都从同一份源码 `plugins/<plugin>/` 安装，但不是每个环境都能拿到全部内容。
 细节见 [docs/harnesses.md](./docs/harnesses.md)。
 
-| 环境 | 安装方式 | Skills | 11 个 agent | Stop hooks |
+| 环境 | 安装方式 | Skills | 11 个 agent | Hooks |
 |---|---|---|---|---|
 | Claude Code | 插件 marketplace | 有 | 有 | 有 |
 | Codex | clone 后 `make install-codex` | 有 | 有 | 无 |
@@ -249,7 +261,7 @@ claude plugin list
 claude plugin details prp-core@nanoboom
 ```
 
-`details` 会打印组件清单：`prp-core` 是 24 个 skill、11 个 agent、2 个 hook，
+`details` 会打印组件清单：`prp-core` 是 25 个 skill、11 个 agent、3 个 hook，
 `github-project` 是 3 个 skill。在会话里，`/plugin` 会把两者列在 `nanoboom`
 marketplace 之下，输入 `/prp-core:` 也能补全出已安装的 skill。
 
@@ -364,7 +376,7 @@ npx skills@latest add NanoBoom/skills --skill prp-technical-writing --global
 境，`--copy` 写入真实文件而不是符号链接，`-y` 跳过提示。之后可以用
 `npx skills list`、`npx skills update`、`npx skills remove` 管理装过的内容。
 
-它只复制 `SKILL.md` 文件及其目录，别的都不带，所以**不会**带上 agent 和 Stop
+它只复制 `SKILL.md` 文件及其目录，别的都不带，所以**不会**带上 agent 和
 hook。三个 `github-project` skill 在设计上就是自包含的，什么都不会丢。多数
 `prp-core` skill 会派发子 agent，这样拿走会降级：skill 能加载，但它要委派的工作
 无处可去。这条路适合单独取一个 skill；要用整个工作流，请走上面对应环境的安装方式。

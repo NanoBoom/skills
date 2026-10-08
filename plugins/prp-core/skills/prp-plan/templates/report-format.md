@@ -1,6 +1,6 @@
 # Plan Created — User Report
 
-Lead with the recommendation, then provide the artifact and only the evidence useful for deciding whether to implement it.
+Lead with the recommendation, then provide the artifact and only the evidence useful for deciding whether to implement it. Write it under the `response-policy` skill.
 
 ```markdown
 ## Plan ready

@@ -2,7 +2,7 @@
 
 The PRP workflow plugin. Its skills are in [`skills/`](./skills), its 11
 specialist agents in [`agents/`](./agents), and its two Claude Code Stop hooks
-in [`hooks/`](./hooks).
+and one opt-in UserPromptSubmit hook in [`hooks/`](./hooks).
 
 Most of these skills dispatch the `prp-core:<agent>` subagents in
 [`agents/`](./agents). Those agents exist only when the plugin is installed,
@@ -40,6 +40,7 @@ so a skill taken through `npx skills` alone will not have them.
 - **[prp-worktree](./skills/prp-worktree/SKILL.md)**: create, list, and tear down worktrees under `.worktrees/` via a bundled CLI.
 - **[prp-worklist](./skills/prp-worklist/SKILL.md)**: user-invoked. Renders a repository's open work so the maintainer can pick what is next.
 - **[agent-policy](./skills/agent-policy/SKILL.md)**: picks the model and effort for every agent at launch by task type, to save tokens, with lookup tables for Claude Code and Codex.
+- **[response-policy](./skills/response-policy/SKILL.md)**: sets the language, shape, and controlled-writing rules for every reply a skill gives the user: the user's language, conclusion first, ASD-STE100 at 80% for English, controlled technical Chinese for Chinese.
 
 ## Authoring
 

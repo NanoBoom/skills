@@ -27,3 +27,17 @@ The harness adapters under `tools/` (`tools/adapters/base.py`,
 `capabilities.py`, `codex.py`, and the generate and install scripts) are
 adapted from https://github.com/wshobson/agents, Copyright (c) 2024 Seth
 Hobson, licensed under the MIT License.
+
+Third-party material adapted after the fork:
+
+- `plugins/prp-core/skills/response-policy/references/chinese.md` adapts
+  rules and samples from https://github.com/Fenng/Tech-Doc-Style-Chinese
+  (`references/controlled-technical-chinese.md` and
+  `references/terminology-and-typography.md`), Copyright (c) 2026 Fenng,
+  licensed under the MIT License.
+- The sentence limits and the light-verb and `的` checks in the same skill
+  follow https://github.com/QingYunA/answer-me-with-html
+  (`src/lint/ste.js`), Copyright (c) 2026 Answer me with HTML contributors,
+  licensed under the MIT License.
+
+Both licenses grant permission on the terms reproduced in LICENSE.

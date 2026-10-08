@@ -56,4 +56,4 @@ Unless publication was disabled or the current harness says its driver owns exte
 
 Do not create a separate local RCA document. The GitHub issue or comment is the artifact.
 
-Read the created or updated issue back to verify the content and capture its URL. Report the diagnosis status, one-sentence cause, publication action, issue URL, fix boundary, regression proof, and any remaining uncertainty.
+Read the created or updated issue back to verify the content and capture its URL. Report the diagnosis status, one-sentence cause, publication action, issue URL, fix boundary, regression proof, and any remaining uncertainty. Write that report under the `response-policy` skill; the GitHub artifact keeps the format above.

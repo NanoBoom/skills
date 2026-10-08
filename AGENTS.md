@@ -19,7 +19,7 @@ plugins/<plugin>/              source of truth, Claude Code plugin format
   skills/<skill>/SKILL.md      plus references/, templates/, workflows/, scripts/
   agents/<agent>.md            prp-core only
   commands/<command>.md        none yet
-  hooks/hooks.json             Claude Code hooks; prp-core's Stop hooks
+  hooks/hooks.json             Claude Code hooks; prp-core's Stop and prompt hooks
   .mcp.json                    Claude Code MCP servers; none yet
   harness/codex/               Codex hooks and MCP servers, Codex format; none yet
   harness/pi/extensions/       Pi extensions; none yet
@@ -74,7 +74,9 @@ in a temporary directory.
    model must read first near the top.
 3. In `prp-core`, dispatch agents as `prp-core:<agent>`. The adapters rewrite
    the name for each harness. `npx skills` users get the skill without that
-   rewrite, so say what to do when the agent is missing.
+   rewrite, so say what to do when the agent is missing. A `prp-core` skill
+   that reports to the user names the `response-policy` skill at its report
+   step, as the existing skills do.
 4. Promote it: plugin `README.md`, top-level `README.md`, `skills.sh.json`.
 5. Bump `version` in the plugin's `plugin.json` and its marketplace entry.
 6. `make generate && make check`.
@@ -134,7 +136,7 @@ adapter and the installer.
 
 ```bash
 make check                     # validate + pytest + ruff, as CI runs them
-npx skills add . --list        # Found 27 skills
+npx skills add . --list        # Found 28 skills
 claude plugin validate .
 claude plugin validate plugins/prp-core/.claude-plugin/plugin.json
 claude plugin validate plugins/github-project/.claude-plugin/plugin.json
@@ -142,9 +144,9 @@ claude -p "hi" --plugin-dir plugins/prp-core --debug-file /tmp/dbg.log
 grep -E "Loaded [0-9]+ (agents|skills) from plugin prp-core" /tmp/dbg.log
 ```
 
-`make validate` reports `OK 27 skill(s) and 11 agent(s) in 2 plugin(s), 2 generated
+`make validate` reports `OK 28 skill(s) and 11 agent(s) in 2 plugin(s), 2 generated
 harness(es), 1 warning(s)`; the warning is the length of `prp-research-team`. The
-debug log shows 11 agents and 24 skills for `prp-core`; `--plugin-dir
+debug log shows 11 agents and 25 skills for `prp-core`; `--plugin-dir
 plugins/github-project` shows 3 skills. Run `npx skills add . --list` from a
 clean tree or straight from GitHub.
 

@@ -68,4 +68,4 @@ After `READY TO MERGE`, wait for every required CI check. A pending check is not
 
 ## 6. Return the outcome
 
-Return the implemented outcome, absolute plan and implementation-report paths, PR URL, `READY TO MERGE` verdict, latest review-report path, GitHub publication URL, validation summary, and CI results. These are the proof the caller verifies before accepting the workstream. Only then suggest meaningful remaining non-blocking follow-ups. If genuinely blocked, return the same artifact bundle plus the exact blocker and recommended next action.
+Return the implemented outcome, absolute plan and implementation-report paths, PR URL, `READY TO MERGE` verdict, latest review-report path, GitHub publication URL, validation summary, and CI results. These are the proof the caller verifies before accepting the workstream. Only then suggest meaningful remaining non-blocking follow-ups. If genuinely blocked, return the same artifact bundle plus the exact blocker and recommended next action. Write the outcome under the `response-policy` skill, and keep `READY TO MERGE` verbatim.
