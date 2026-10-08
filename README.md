@@ -182,9 +182,9 @@ this hook extends the policy to every other reply. Turn it on by setting
 { "env": { "PRP_RESPONSE_POLICY": "1" } }
 ```
 
-When it is on, each prompt gets one short reminder, under 100 tokens: reply in
-your language, conclusion first, under controlled writing. It does not read the
-prompt. Remove the variable to turn it off.
+When it is on, each prompt gets a one-line reminder, about 10 tokens, that names
+the `response-policy` skill; the model loads the rules from the skill. It does
+not read the prompt. Remove the variable to turn it off.
 
 All three hooks ship only with the plugin and are written for Claude Code. If you
 copy the skills into `.claude/skills/` directly, none of them runs. See

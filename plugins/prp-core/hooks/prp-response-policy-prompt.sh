@@ -13,5 +13,5 @@ set -euo pipefail
 [ "${PRP_RESPONSE_POLICY:-}" = "1" ] || exit 0
 
 cat <<'JSON'
-{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"[prp-core response-policy] Write this turn's reply to the user under the prp-core:response-policy skill: the user's language, the conclusion first, controlled writing (ASD-STE100 at 80% for English, controlled technical Chinese for Chinese), no fact added or dropped, and fixed signals, paths, and code verbatim. Load the skill first if it is not loaded."}}
+{"hookSpecificOutput":{"hookEventName":"UserPromptSubmit","additionalContext":"Reply under skill prp-core:response-policy."}}
 JSON
