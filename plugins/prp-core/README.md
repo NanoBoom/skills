@@ -1,8 +1,9 @@
 # prp-core
 
 The PRP workflow plugin. Its skills are in [`skills/`](./skills), its 11
-specialist agents in [`agents/`](./agents), and its two Claude Code Stop hooks
-and one opt-in UserPromptSubmit hook in [`hooks/`](./hooks).
+specialist agents in [`agents/`](./agents), and its two Stop hooks and one
+opt-in UserPromptSubmit hook in [`hooks/`](./hooks), with Codex copies in
+[`harness/codex/hooks/`](./harness/codex/hooks).
 
 Most of these skills dispatch the `prp-core:<agent>` subagents in
 [`agents/`](./agents). Those agents exist only when the plugin is installed,

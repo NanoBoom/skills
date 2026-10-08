@@ -21,7 +21,7 @@ plugins/<plugin>/              source of truth, Claude Code plugin format
   commands/<command>.md        none yet
   hooks/hooks.json             Claude Code hooks; prp-core's Stop and prompt hooks
   .mcp.json                    Claude Code MCP servers; none yet
-  harness/codex/               Codex hooks and MCP servers, Codex format; none yet
+  harness/codex/               Codex hooks and MCP servers, Codex format; prp-core's hooks
   harness/pi/extensions/       Pi extensions; none yet
   README.md
 .claude-plugin/marketplace.json   hand-written; one entry per plugin

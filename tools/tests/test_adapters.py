@@ -102,8 +102,7 @@ def test_codex_marketplace_lists_every_plugin_with_skills(tmp_path: Path):
     assert marketplace["name"] == "nanoboom"
     assert [p["name"] for p in marketplace["plugins"]] == ["github-project", "prp-core"]
     manifest = json.loads((tmp_path / "build/codex/plugins/prp-core/.codex-plugin/plugin.json").read_text())
-    # prp-core's Stop hooks are Claude Code's; it has no harness/codex/.
-    assert "hooks" not in manifest and manifest["skills"] == "./skills/"
+    assert manifest["hooks"] == "./hooks/hooks.json" and manifest["skills"] == "./skills/"
 
 
 def test_pi_agents_get_read_only_tools(tmp_path: Path):

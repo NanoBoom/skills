@@ -174,7 +174,7 @@ Claude Code 设置的 `env` 块里把 `PRP_RESPONSE_POLICY` 设为 `1`：
 开启后，每条 prompt 会附带一行约 10 token 的提醒，只点名 `response-policy` skill，具体
 规则由模型从 skill 里加载。它不读取 prompt 内容。删掉这个变量即可关闭。
 
-三个 hook 都只随插件分发，并且是为 Claude Code 写的。如果你只是把 skill 直接复制进
+三个 hook 都只随插件分发，Claude Code 和 Codex 都会运行。如果你只是把 skill 直接复制进
 `.claude/skills/`，它们都不会运行。其他环境的情况见
 [docs/harnesses.md](./docs/harnesses.md#hooks)。
 

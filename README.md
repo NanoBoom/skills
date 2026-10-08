@@ -186,7 +186,7 @@ When it is on, each prompt gets a one-line reminder, about 10 tokens, that names
 the `response-policy` skill; the model loads the rules from the skill. It does
 not read the prompt. Remove the variable to turn it off.
 
-All three hooks ship only with the plugin and are written for Claude Code. If you
+All three hooks ship only with the plugin, for Claude Code and Codex. If you
 copy the skills into `.claude/skills/` directly, none of them runs. See
 [docs/harnesses.md](./docs/harnesses.md#hooks) for other harnesses.
 

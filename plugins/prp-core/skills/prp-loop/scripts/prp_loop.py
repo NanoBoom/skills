@@ -564,7 +564,8 @@ def start(argv: list[str]) -> dict:
                     help="Stop after the named stage completes. '--until implement' stops after "
                          "the implementation is green, committed, and opened as a PR.")
     ap.add_argument("--resume", action="store_true", help="Resume from the existing state file.")
-    ap.add_argument("--owner", default=os.environ.get("CLAUDE_CODE_SESSION_ID", ""),
+    ap.add_argument("--owner",
+                    default=os.environ.get("CLAUDE_CODE_SESSION_ID") or os.environ.get("CODEX_THREAD_ID", ""),
                     help="Session driving the loop; scopes the plugin's Stop hook "
                          "(default: the session id the harness exports, if any).")
     args = ap.parse_args(argv)

@@ -199,12 +199,18 @@ or `--approve` in print mode.
 
 ## Hooks
 
-`prp-loop-stop.sh` and `prp-research-team-stop.sh` are Claude Code Stop hooks,
-and the opt-in `prp-response-policy-prompt.sh` is a Claude Code
-UserPromptSubmit hook, all in `plugins/prp-core/hooks/hooks.json`. `prp-core`
-has no `harness/` directory, so neither Codex nor Pi runs them. `prp-loop-stop.sh`
-would do nothing there anyway: the loop records its owner from
-`CLAUDE_CODE_SESSION_ID`, so a loop started elsewhere has no owner for the hook
-to hold. Without the prompt hook, `response-policy` still applies at every PRP
-skill's report step, because each of those skills names it. A Codex or Pi
-version of any of these hooks would go in `plugins/prp-core/harness/`.
+`prp-loop-stop.sh` and `prp-research-team-stop.sh` are Stop hooks, and the
+opt-in `prp-response-policy-prompt.sh` is a UserPromptSubmit hook. Claude Code
+runs them from `plugins/prp-core/hooks/hooks.json`, and Codex runs copies from
+`plugins/prp-core/harness/codex/hooks/`. Codex reads the same hook input and
+output fields, so the copies differ only in the prompt hook's reminder, which
+names the skill as Codex lists it. Change a script in both places.
+
+The loop records its owner from `CLAUDE_CODE_SESSION_ID`, or from
+`CODEX_THREAD_ID` in Codex; both equal the `session_id` the Stop hook reads. In
+Codex, set `PRP_RESPONSE_POLICY=1` in the environment that starts `codex` to turn
+on the prompt hook, and review the hooks once when Codex lists them as new.
+
+Pi runs none of them: `prp-core` has no `harness/pi/`. Without the prompt hook,
+`response-policy` still applies at every PRP skill's report step, because each
+of those skills names it.
